@@ -66,6 +66,7 @@ def applyRegex(text, regex):
 
 def handleTexts(wetTexts):
 	texts = []
+	average_size = 0;
 	for text in wetTexts:
 
 		try:
@@ -74,10 +75,13 @@ def handleTexts(wetTexts):
 			wikicode = page['revisions'][0]['*']
 			parsed_wikicode = mw.parse(wikicode)
 			print("WIKIPEDIA_ARTICLE_BEGIN: ", title)
-			print(parsed_wikicode.strip_code())
+			stripped_wikicode = parsed_wikicode.strip_code()
+			print(stripped_wikicode)
 			print("WIKIPEDIA_ARTICLE_END")
 		except ValueError:
 			print("[!!!] Pass none text: ")
+
+	print("Average size: ", average_size / len(wetTexts))
 	return texts
 
 
