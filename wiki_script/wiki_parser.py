@@ -12,7 +12,7 @@ import mwparserfromhell as mw
 from aiohttp import ClientSession
 
 async def fetch(url, name, session):
-	async with session.get(url, params={'action': 'query', 'format': 'json', 'titles': name, 'prop': 'revisions', 'rvprop': 'content' }) as response:
+	async with session.get(url, params={'action': 'query', 'format': 'json', 'titles': name, 'prop': 'extracts', 'explaintext': 1}) as response:
 		return (name, response.status, await response.text())
 
 async def run(articlesList):
@@ -66,22 +66,21 @@ def applyRegex(text, regex):
 
 def handleTexts(wetTexts):
 	texts = []
-	average_size = 0;
 	for text in wetTexts:
 
 		try:
 			page = next(iter(json.loads(text)['query']['pages'].values()))	
 			title = page['title']
-			wikicode = page['revisions'][0]['*']
-			parsed_wikicode = mw.parse(wikicode)
+			#wikicode = page['revisions'][0]['*']
+			#parsed_wikicode = mw.parse(wikicode)
 			print("WIKIPEDIA_ARTICLE_BEGIN: ", title)
-			stripped_wikicode = parsed_wikicode.strip_code()
-			print(stripped_wikicode)
+			#stripped_wikicode = parsed_wikicode.strip_code()
+			wikitext = page['extract']
+			print(wikitext)
 			print("WIKIPEDIA_ARTICLE_END")
 		except ValueError:
 			print("[!!!] Pass none text: ")
 
-	print("Average size: ", average_size / len(wetTexts))
 	return texts
 
 
