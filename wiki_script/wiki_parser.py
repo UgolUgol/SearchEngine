@@ -12,7 +12,7 @@ import mwparserfromhell as mw
 from aiohttp import ClientSession
 
 async def fetch(url, name, session):
-	async with session.get(url, params={'action': 'query', 'format': 'json', 'titles': name, 'prop': 'extracts', 'explaintext': 1}) as response:
+	async with session.get(url, params={'action': 'query', 'format': 'json', 'titles': name, 'prop': 'extracts|info', 'inprop': 'url', 'explaintext': 1}) as response:
 		return (name, response.status, await response.text())
 
 async def run(articlesList):
@@ -71,10 +71,8 @@ def handleTexts(wetTexts):
 		try:
 			page = next(iter(json.loads(text)['query']['pages'].values()))	
 			title = page['title']
-			#wikicode = page['revisions'][0]['*']
-			#parsed_wikicode = mw.parse(wikicode)
-			print("WIKIPEDIA_ARTICLE_BEGIN: ", title)
-			#stripped_wikicode = parsed_wikicode.strip_code()
+			url = page['fullurl']
+			print("WIKIPEDIA_ARTICLE_BEGIN: ", title, '|WIKI_URL: ', url)
 			wikitext = page['extract']
 			print(wikitext)
 			print("WIKIPEDIA_ARTICLE_END")
