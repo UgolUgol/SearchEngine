@@ -27,9 +27,13 @@ std::wstring readData(std::string filename) {
 
 
 
+bool isArticle(const std::wstring& token) {
+
+	return token == L"the";
+}
+
+
 void tokenize(const std::wstring& text, const size_t& endline) {
-
-
 
 	std::vector<std::wstring> tokens;
 	boost::split_regex(tokens, text.c_str() + endline, boost::wregex(L"[[:punct:]\\s»«]+", boost::wregex::extended ));
@@ -37,7 +41,7 @@ void tokenize(const std::wstring& text, const size_t& endline) {
 
 	std::copy_if(tokens.cbegin(), tokens.cend(), 
 				 std::ostream_iterator<std::wstring, wchar_t>(std::wcout, L"\n"),
-	 		  	 [](const std::wstring& token) { return token.size() > 1; });
+	 		  	 [](const std::wstring& token) { return token.size() > 1 && ! isArticle(token); });
 }
 
 
