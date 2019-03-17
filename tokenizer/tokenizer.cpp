@@ -7,7 +7,10 @@
 #include <streambuf>
 #include <locale>
 #include <codecvt>
+#include <future>
 
+using Tokens = std::vector<std::wstring>;
+using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
 
 std::wstring readData(std::string filename) {
 
@@ -33,15 +36,31 @@ bool isArticle(const std::wstring& token) {
 }
 
 
-void tokenize(const std::wstring& text, const size_t& endline) {
+Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
-	std::vector<std::wstring> tokens;
+	Tokens tokens;
 	boost::split_regex(tokens, text.c_str() + endline, boost::wregex(L"[[:punct:]\\s»«]+", boost::wregex::extended ));
 
+	auto it = std::remove_if(tokens.begin(), tokens.end(), [](const auto& token){
+		return token.size() == 1 || isArticle(token);
+	});
+	tokens.erase(it, tokens.end());
 
-	std::copy_if(tokens.cbegin(), tokens.cend(), 
-				 std::ostream_iterator<std::wstring, wchar_t>(std::wcout, L"\n"),
-	 		  	 [](const std::wstring& token) { return token.size() > 1 && ! isArticle(token); });
+	return tokens;
+
+}
+
+void findBigrams(Tokens& tokens) {
+
+	Tokens bigrams(tokens.size() - 1);
+
+	size_t idx = 0;
+	for(auto token = tokens.cbegin(); token != tokens.cend() - 1; token++) {
+		auto nextToken = std::next(token);
+		bigrams[idx++] = (*token + L" " + *nextToken);
+	}
+
+	std::move(bigrams.begin(), bigrams.end(), std::back_inserter(tokens));
 }
 
 
@@ -52,25 +71,45 @@ int main(){
 
 	std::wstring texts;
 	std::vector<std::wstring> splittedTexts;
+
 	texts = readData("res1_url");
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
 
+	std::vector<ArticleBox> articlesTokens(splittedTexts.size() - 1);
+	std::vector<std::thread> ths(splittedTexts.size() - 1);
+	
+
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
-	std::for_each(splittedTexts.cbegin(), splittedTexts.cend() - 1,
-	 			  [&namePadding, &urlPadding](const auto& text) {
+	size_t idx = 0;
 
-						const auto delim = text.find(L" |WIKI_URL:");
-						const auto endline = text.find(L"\n");
+	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; text++) {
 
-						const auto articleName = text.substr(namePadding, delim - namePadding);
-						const auto url = text.substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
-	 			   		
-	 			   		std::wcout<<L"WIKIPEDIA_ARTICLE_BEGIN: "<< articleName << "|" << url << std::endl;
-	 			   		tokenize(text, endline);
-	 			   		std::wcout<<L"WIKIPEDIA_ARTICLE_END"<<std::endl;
-	 			   });
-	
+		const auto delim = (*text).find(L" |WIKI_URL:");
+		const auto endline = (*text).find(L"\n");
+
+		const auto articleName = (*text).substr(namePadding, delim - namePadding);
+		const auto url = (*text).substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
+
+		articlesTokens[idx] = std::make_tuple(articleName, url, tokenize(*text, endline));
+		ths[idx++] = std::thread(findBigrams, std::ref(std::get<2>(articlesTokens[idx])));
+
+	} 
+
+
+	for(auto& th : ths) { 
+		th.join();
+	}
+
+	for(const auto& article : articlesTokens) {
+
+		std::wcout<<L"WIKIPEDIA_ARTICLE_BEGIN: "<<std::get<0>(article)<<L" | WIKI_URL: "<<std::get<1>(article)<<std::endl;
+		for(const auto& token : std::get<2>(article)) {
+			std::wcout<<token<<std::endl;
+		}
+	}
+
+
 
 
 	
