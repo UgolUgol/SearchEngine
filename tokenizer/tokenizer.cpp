@@ -6,6 +6,7 @@
 #include <locale>
 #include <codecvt>
 #include <future>
+#include <cmath>
 
 using Tokens = std::vector<std::wstring>;
 using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
@@ -66,17 +67,19 @@ void createBigram(Tokens& bigrams,
 
 }
 
-Tokens findBigrams(Tokens& tokens, size_t batchSize) {
+void findBigrams(Tokens& tokens) {
 
 	size_t tokensCount = tokens.size();
+	size_t numsCount = log10(tokensCount);
+	size_t batchSize = pow(3, numsCount * 2);
+
 	Tokens bigrams(tokensCount - 1);
 	std::vector<std::thread> ths;
 
 	size_t bucketNum = 0;
 	for(auto token = tokens.cbegin(); token != tokens.cend(); ++bucketNum) {
 
-		auto rborder = std::min(batchSize - 1, 
-								static_cast<size_t>(std::distance(token, tokens.cend())) - 1);
+		auto rborder = std::min(batchSize - 1, static_cast<size_t>(std::distance(token, tokens.cend())) - 1);
 		if(!rborder) {
 			break;
 		}
@@ -89,7 +92,9 @@ Tokens findBigrams(Tokens& tokens, size_t batchSize) {
 	for(auto& th : ths) {
 		th.join();
 	}
-	return bigrams;
+
+
+	std::move(bigrams.begin(), bigrams.end(), std::back_inserter(tokens));
 }
 
 
@@ -101,10 +106,11 @@ int main(){
 	std::wstring texts;
 	std::vector<std::wstring> splittedTexts;
 
-	texts = readData("res1");
+	texts = readData("res1_url");
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
 
 	std::vector<ArticleBox> articlesTokens(splittedTexts.size() - 1);
+	std::vector<std::future<void>> futs;
 
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
@@ -119,24 +125,19 @@ int main(){
 		const auto url = (*text).substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
 
 		articlesTokens[idx] = std::make_tuple(articleName, url, tokenize(*text, endline));
-		Tokens bigrams = findBigrams(std::get<2>(articlesTokens[idx]), 50);
-
-		std::move(bigrams.begin(), bigrams.end(), std::back_inserter(std::get<2>(articlesTokens[idx++])));
-
+		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(std::get<2>(articlesTokens[idx++]))));
 	} 
 
-
+	for(auto& fut : futs) {
+		fut.wait();
+	}
 
 	for(const auto& article : articlesTokens) {
 
 		std::wcout<<L"WIKIPEDIA_ARTICLE_BEGIN: "<<std::get<0>(article)<<L" | WIKI_URL: "<<std::get<1>(article)<<std::endl;
+		
 		for(const auto& token : std::get<2>(article)) {
 			std::wcout<<token<<std::endl;
 		}
 	}
-
-
-
-
-	
 }
