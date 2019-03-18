@@ -1,7 +1,5 @@
 #include <iostream>
 #include <boost/algorithm/string/regex.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <regex>
 #include <vector>
 #include <fstream>
 #include <streambuf>
@@ -11,6 +9,8 @@
 
 using Tokens = std::vector<std::wstring>;
 using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
+
+
 
 std::wstring readData(std::string filename) {
 
@@ -39,7 +39,7 @@ bool isArticle(const std::wstring& token) {
 Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
 	Tokens tokens;
-	boost::split_regex(tokens, text.c_str() + endline, boost::wregex(L"[[:punct:]\\s»«]+", boost::wregex::extended ));
+	boost::split_regex(tokens, text.c_str() + endline + 1, boost::wregex(L"[[:punct:][:cntrl:]\\s»«]+", boost::wregex::extended ));
 
 	auto it = std::remove_if(tokens.begin(), tokens.end(), [](const auto& token){
 		return token.size() == 1 || isArticle(token);
@@ -50,17 +50,46 @@ Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
 }
 
-void findBigrams(Tokens& tokens) {
+void createBigram(Tokens& bigrams,
+				  Tokens::const_iterator lborder,
+				  Tokens::const_iterator rborder,
+				  size_t bucketNum,
+				  size_t batchSize) {
 
-	Tokens bigrams(tokens.size() - 1);
+	size_t idx = bucketNum * (batchSize - 1);
+	for(auto token = lborder; token != rborder; token++) {
 
-	size_t idx = 0;
-	for(auto token = tokens.cbegin(); token != tokens.cend() - 1; token++) {
 		auto nextToken = std::next(token);
 		bigrams[idx++] = (*token + L" " + *nextToken);
+		
 	}
 
-	std::move(bigrams.begin(), bigrams.end(), std::back_inserter(tokens));
+}
+
+Tokens findBigrams(Tokens& tokens, size_t batchSize) {
+
+	size_t tokensCount = tokens.size();
+	Tokens bigrams(tokensCount - 1);
+	std::vector<std::thread> ths;
+
+	size_t bucketNum = 0;
+	for(auto token = tokens.cbegin(); token != tokens.cend(); ++bucketNum) {
+
+		auto rborder = std::min(batchSize - 1, 
+								static_cast<size_t>(std::distance(token, tokens.cend())) - 1);
+		if(!rborder) {
+			break;
+		}
+
+		ths.emplace_back(createBigram, std::ref(bigrams), token, std::next(token, rborder), bucketNum, batchSize);
+		std::advance(token, rborder);
+
+	}
+
+	for(auto& th : ths) {
+		th.join();
+	}
+	return bigrams;
 }
 
 
@@ -72,12 +101,10 @@ int main(){
 	std::wstring texts;
 	std::vector<std::wstring> splittedTexts;
 
-	texts = readData("res1_url");
+	texts = readData("res1");
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
 
 	std::vector<ArticleBox> articlesTokens(splittedTexts.size() - 1);
-	std::vector<std::thread> ths(splittedTexts.size() - 1);
-	
 
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
@@ -92,14 +119,13 @@ int main(){
 		const auto url = (*text).substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
 
 		articlesTokens[idx] = std::make_tuple(articleName, url, tokenize(*text, endline));
-		ths[idx++] = std::thread(findBigrams, std::ref(std::get<2>(articlesTokens[idx])));
+		Tokens bigrams = findBigrams(std::get<2>(articlesTokens[idx]), 50);
+
+		std::move(bigrams.begin(), bigrams.end(), std::back_inserter(std::get<2>(articlesTokens[idx++])));
 
 	} 
 
 
-	for(auto& th : ths) { 
-		th.join();
-	}
 
 	for(const auto& article : articlesTokens) {
 
