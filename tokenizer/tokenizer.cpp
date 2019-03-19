@@ -10,8 +10,7 @@
 
 using Tokens = std::vector<std::wstring>;
 using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
-
-
+const wchar_t* breakset = L"!#$%&()*+,./:;<=>?@[]^_{|}~»«\"\\—\n ";
 
 std::wstring readData(std::string filename) {
 
@@ -30,6 +29,24 @@ std::wstring readData(std::string filename) {
 }
 
 
+void split_regex(Tokens& dest, const wchar_t* src, const wchar_t* breakset, size_t srcSize) {
+
+	const wchar_t* end = src + srcSize;
+	while(src != end) {
+		auto str = std::wcspbrk(src, breakset);
+		if(!str) {
+			dest.emplace_back(src);
+			break;
+		}
+
+		size_t diff = str - src;
+		if(diff) {
+			dest.emplace_back(src, diff);
+		}
+		src += (diff + 1); 	
+	}
+}
+
 
 bool isArticle(const std::wstring& token) {
 
@@ -40,7 +57,7 @@ bool isArticle(const std::wstring& token) {
 Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
 	Tokens tokens;
-	boost::split_regex(tokens, text.c_str() + endline + 1, boost::wregex(L"[[:punct:][:cntrl:]\\s»«]+", boost::wregex::extended ));
+	split_regex(tokens, text.c_str() + endline + 1, breakset, text.size() - endline - 1);
 
 	auto it = std::remove_if(tokens.begin(), tokens.end(), [](const auto& token){
 		return token.size() <= 1 || isArticle(token);
