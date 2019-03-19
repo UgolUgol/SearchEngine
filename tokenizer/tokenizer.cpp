@@ -43,7 +43,7 @@ Tokens tokenize(const std::wstring& text, const size_t& endline) {
 	boost::split_regex(tokens, text.c_str() + endline + 1, boost::wregex(L"[[:punct:][:cntrl:]\\s»«]+", boost::wregex::extended ));
 
 	auto it = std::remove_if(tokens.begin(), tokens.end(), [](const auto& token){
-		return token.size() == 1 || isArticle(token);
+		return token.size() <= 1 || isArticle(token);
 	});
 	tokens.erase(it, tokens.end());
 
@@ -72,6 +72,10 @@ void findBigrams(Tokens& tokens) {
 	size_t tokensCount = tokens.size();
 	size_t numsCount = log10(tokensCount);
 	size_t batchSize = pow(3, numsCount * 2);
+	
+	if(batchSize == 1) {
+		batchSize = tokensCount;
+	}
 
 	Tokens bigrams(tokensCount - 1);
 	std::vector<std::thread> ths;
@@ -139,5 +143,6 @@ int main(){
 		for(const auto& token : std::get<2>(article)) {
 			std::wcout<<token<<std::endl;
 		}
+		std::wcout<<L"WIKIPEDIA_ARTICLE_END"<<std::endl;
 	}
 }
