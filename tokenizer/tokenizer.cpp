@@ -7,6 +7,8 @@
 #include <codecvt>
 #include <future>
 #include <cmath>
+#include <chrono>
+
 
 using Tokens = std::vector<std::wstring>;
 using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
@@ -43,7 +45,7 @@ void split_regex(Tokens& dest, const wchar_t* src, const wchar_t* breakset, size
 		if(diff) {
 			dest.emplace_back(src, diff);
 		}
-		src += (diff + 1); 	
+		src = str + 1;
 	}
 }
 
@@ -87,12 +89,10 @@ void createBigram(Tokens& bigrams,
 void findBigrams(Tokens& tokens) {
 
 	size_t tokensCount = tokens.size();
-	size_t numsCount = log10(tokensCount);
-	size_t batchSize = pow(3, numsCount * 2);
-	
-	if(batchSize == 1) {
-		batchSize = tokensCount;
+	if(tokensCount <= 1) {
+		return;
 	}
+	size_t batchSize = tokensCount;
 
 	Tokens bigrams(tokensCount - 1);
 	std::vector<std::thread> ths;
@@ -153,13 +153,16 @@ int main(){
 		fut.wait();
 	}
 
-	for(const auto& article : articlesTokens) {
+	std::wofstream output("tokens");
+	output.imbue(std::locale("ru_RU.utf8"));
+	std::ostream_iterator<std::wstring, wchar_t, std::char_traits<wchar_t>> it(output, L"\n");
 
-		std::wcout<<L"WIKIPEDIA_ARTICLE_BEGIN: "<<std::get<0>(article)<<L" | WIKI_URL: "<<std::get<1>(article)<<std::endl;
-		
-		for(const auto& token : std::get<2>(article)) {
-			std::wcout<<token<<std::endl;
-		}
-		std::wcout<<L"WIKIPEDIA_ARTICLE_END"<<std::endl;
+	for(const auto& article : articlesTokens) {
+		it = L"WIKIPEDIA_ARTICLE_BEGIN: " + std::get<0>(article) + L" | WIKI_URL: " + std::get<1>(article);
+		auto tokens = std::get<2>(article);
+		std::copy(tokens.begin(), tokens.end(), it);
+		it = L"WIKIPEDIA_ARTICLE_END";
 	}
+	output.close();
+
 }
