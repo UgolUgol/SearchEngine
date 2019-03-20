@@ -80,7 +80,7 @@ void createBigram(Tokens& bigrams,
 	for(auto token = lborder; token != rborder; token++) {
 
 		auto nextToken = std::next(token);
-		bigrams[idx++] = (*token + L" " + *nextToken);
+		bigrams[idx++] = (*token + L"_" + *nextToken);
 		
 	}
 
@@ -92,12 +92,12 @@ void findBigrams(Tokens& tokens) {
 	if(tokensCount <= 1) {
 		return;
 	}
-	size_t batchSize = tokensCount;
 
-	Tokens bigrams(tokensCount - 1);
 	std::vector<std::thread> ths;
+	Tokens bigrams(tokensCount - 1);
 
 	size_t bucketNum = 0;
+	size_t batchSize = tokensCount;
 	for(auto token = tokens.cbegin(); token != tokens.cend(); ++bucketNum) {
 
 		auto rborder = std::min(batchSize - 1, static_cast<size_t>(std::distance(token, tokens.cend())) - 1);
@@ -118,7 +118,6 @@ void findBigrams(Tokens& tokens) {
 	std::move(bigrams.begin(), bigrams.end(), std::back_inserter(tokens));
 }
 
-
 int main(){
 
 	std::wcout.sync_with_stdio(false);
@@ -126,6 +125,7 @@ int main(){
 
 	std::wstring texts;
 	std::vector<std::wstring> splittedTexts;
+
 
 	texts = readData("res1_url");
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
@@ -136,7 +136,6 @@ int main(){
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
 	size_t idx = 0;
-
 	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; text++) {
 
 		const auto delim = (*text).find(L" |WIKI_URL:");
