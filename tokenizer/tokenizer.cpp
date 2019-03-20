@@ -11,7 +11,7 @@
 
 
 using Tokens = std::vector<std::wstring>;
-const wchar_t* breakset = L"!#$%&()*+,./:;<=>?@[]^_{|}~»«\"\\—\n ";
+const wchar_t* breakset = L"!#$%&()*+,./:;<=>?@[]^_{|}~»«\"\\—\n\t ";
 
 struct ArticleBox {
 	std::vector<std::wstring> names;
