@@ -11,8 +11,13 @@
 
 
 using Tokens = std::vector<std::wstring>;
-using ArticleBox = std::tuple<std::wstring, std::wstring, Tokens>;
 const wchar_t* breakset = L"!#$%&()*+,./:;<=>?@[]^_{|}~»«\"\\—\n ";
+
+struct ArticleBox {
+	std::vector<std::wstring> names;
+	std::vector<std::wstring> urls;
+	std::vector<Tokens> tokens;
+};
 
 std::wstring readData(std::string filename) {
 
@@ -130,22 +135,27 @@ int main(){
 	texts = readData("res1_url");
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
 
-	std::vector<ArticleBox> articlesTokens(splittedTexts.size() - 1);
+	ArticleBox articles;
+	articles.names.resize(splittedTexts.size() - 1);
+	articles.urls.resize(splittedTexts.size() - 1);
+	articles.tokens.resize(splittedTexts.size() - 1);
 	std::vector<std::future<void>> futs;
 
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
 	size_t idx = 0;
-	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; text++) {
+	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; ++text) {
 
 		const auto delim = (*text).find(L" |WIKI_URL:");
 		const auto endline = (*text).find(L"\n");
 
-		const auto articleName = (*text).substr(namePadding, delim - namePadding);
-		const auto url = (*text).substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
+		auto articleName = (*text).substr(namePadding, delim - namePadding);
+		auto url = (*text).substr(delim + urlPadding, endline - namePadding - urlPadding - articleName.size());
 
-		articlesTokens[idx] = std::make_tuple(articleName, url, tokenize(*text, endline));
-		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(std::get<2>(articlesTokens[idx++]))));
+		articles.names[idx] = std::move(articleName);
+		articles.urls[idx] = std::move(url);
+		articles.tokens[idx] = tokenize(*text, endline);
+		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(articles.tokens[idx++])));
 	} 
 
 	for(auto& fut : futs) {
@@ -156,10 +166,10 @@ int main(){
 	output.imbue(std::locale("ru_RU.utf8"));
 	std::ostream_iterator<std::wstring, wchar_t, std::char_traits<wchar_t>> it(output, L"\n");
 
-	for(const auto& article : articlesTokens) {
-		it = L"WIKIPEDIA_ARTICLE_BEGIN: " + std::get<0>(article) + L" | WIKI_URL: " + std::get<1>(article);
-		auto tokens = std::get<2>(article);
-		std::copy(tokens.begin(), tokens.end(), it);
+	idx = 0;
+	for(;idx < splittedTexts.size() - 1; ++idx) {
+		it = L"WIKIPEDIA_ARTICLE_BEGIN: " + articles.names[idx] + L" | WIKI_URL: " + articles.urls[idx];
+		std::copy(articles.tokens[idx].begin(), articles.tokens[idx].end(), it);
 		it = L"WIKIPEDIA_ARTICLE_END";
 	}
 	output.close();
