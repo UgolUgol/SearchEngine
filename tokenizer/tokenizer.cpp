@@ -126,7 +126,7 @@ void findBigrams(Tokens& tokens) {
 int main(){
 
 	std::wcout.sync_with_stdio(false);
-  	std::wcout.imbue(std::locale("ru_RU.utf8"));
+  	std::setlocale(LC_ALL, "ru_RU.utf8");
 
 	std::wstring texts;
 	std::vector<std::wstring> splittedTexts;
@@ -169,7 +169,12 @@ int main(){
 	idx = 0;
 	for(;idx < splittedTexts.size() - 1; ++idx) {
 		it = L"WIKIPEDIA_ARTICLE_BEGIN: " + articles.names[idx] + L" | WIKI_URL: " + articles.urls[idx];
-		std::copy(articles.tokens[idx].begin(), articles.tokens[idx].end(), it);
+		std::transform(articles.tokens[idx].begin(),
+		 			   articles.tokens[idx].end(), it, 
+		 			   [](auto& token) {
+		 			   		std::transform(token.begin(), token.end(), token.begin(), std::towlower);
+		 			   		return token;
+		 			   });
 		it = L"WIKIPEDIA_ARTICLE_END";
 	}
 	output.close();
