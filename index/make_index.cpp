@@ -10,5 +10,29 @@
 #include <tools.h>
 
 int main() {
-	std::vector<Tools::ArticleBox> bb;
+	std::setlocale(LC_ALL, "ru_RU.utf8");
+	std::wifstream ifs("a");
+	ifs.imbue(std::locale("ru_RU.utf8"));
+
+	while(!ifs.eof()) {
+		std::wstring info;
+		std::wstring text;
+
+		std::getline(ifs, info);
+		std::wistringstream ss(info);
+		
+		if(info.empty()) break;
+		size_t size;
+		ss >> size;
+
+		text.assign(size - 1, L' ');
+		ifs.read(&text[0], size);
+		std::wcout<<text<<std::endl;
+		std::wcout<<"===="<<std::endl;
+		
+	}
+
+
+	ifs.close();
+
 }
