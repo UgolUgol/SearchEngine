@@ -9,15 +9,22 @@
 #include <cmath>
 #include <chrono>
 #include <tools.h>
+#include <numeric>
 
 using namespace Tools;
 const wchar_t* breakset = L"!#$%&()*+,./:;“„<=>?@[]^_{|}~»«\"\\—\n\t ";
 
 bool isArticle(const std::wstring& token) {
 
-	return token == L"the";
+	return token == L"the" || token == L"an";
 }
 
+
+unsigned calculateSize(Tokens& tokens) {
+
+	return tokens.size() + std::accumulate(tokens.cbegin(), tokens.cend(), 0,
+	 					   [](unsigned sum, const auto& token) { return sum + token.size(); });
+}
 
 Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
@@ -94,15 +101,17 @@ int main(){
 	boost::split_regex(splittedTexts, texts, boost::wregex(L"\nWIKIPEDIA_ARTICLE_END\n"));
 
 	ArticleBox articles;
-	articles.names.resize(splittedTexts.size() - 1);
-	articles.urls.resize(splittedTexts.size() - 1);
-	articles.tokens.resize(splittedTexts.size() - 1);
+	auto artsCount = splittedTexts.size() - 1;
+	articles.names.resize(artsCount);
+	articles.urls.resize(artsCount);
+	articles.tokens.resize(artsCount);
+	articles.size.resize(artsCount);
 	std::vector<std::future<void>> futs;
 
 	const auto namePadding = 26;
 	const auto urlPadding = 13;
 	size_t idx = 0;
-	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; ++text) {
+	for(auto text = splittedTexts.cbegin(); text != splittedTexts.cend() - 1; ++text, ++idx) {
 
 		const auto delim = (*text).find(L" |WIKI_URL:");
 		const auto endline = (*text).find(L"\n");
@@ -113,7 +122,9 @@ int main(){
 		articles.names[idx] = std::move(articleName);
 		articles.urls[idx] = std::move(url);
 		articles.tokens[idx] = tokenize(*text, endline);
-		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(articles.tokens[idx++])));
+		articles.tokens[idx].emplace_back(L"@DUMMY");
+		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(articles.tokens[idx])));
+		articles.size[idx] = calculateSize(articles.tokens[idx]);
 	} 
 
 	for(auto& fut : futs) {
@@ -126,14 +137,14 @@ int main(){
 
 	idx = 0;
 	for(;idx < splittedTexts.size() - 1; ++idx) {
-		it = L"WIKIPEDIA_ARTICLE_BEGIN: " + articles.names[idx] + L" | WIKI_URL: " + articles.urls[idx];
+
+		it = articles.names[idx] + L"|" + articles.urls[idx] + L"|" + std::to_wstring(articles.size[idx]);
 		std::transform(articles.tokens[idx].begin(),
 		 			   articles.tokens[idx].end(), it, 
 		 			   [](auto& token) {
 		 			   		std::transform(token.begin(), token.end(), token.begin(), std::towlower);
 		 			   		return token;
 		 			   });
-		it = L"WIKIPEDIA_ARTICLE_END";
 	}
 	output.close();
 
