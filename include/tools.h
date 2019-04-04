@@ -12,7 +12,6 @@ namespace Tools {
 		std::vector<std::wstring> names;
 		std::vector<std::wstring> urls;
 		std::vector<Tokens> tokens;
-		std::vector<unsigned> size;
 	};
 
 	extern std::wstring readData(std::string filename);

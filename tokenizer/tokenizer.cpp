@@ -105,7 +105,6 @@ int main(){
 	articles.names.resize(artsCount);
 	articles.urls.resize(artsCount);
 	articles.tokens.resize(artsCount);
-	articles.size.resize(artsCount);
 	std::vector<std::future<void>> futs;
 
 	const auto namePadding = 26;
@@ -124,7 +123,6 @@ int main(){
 		articles.tokens[idx] = tokenize(*text, endline);
 		articles.tokens[idx].emplace_back(L"@DUMMY");
 		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(articles.tokens[idx])));
-		articles.size[idx] = calculateSize(articles.tokens[idx]);
 	} 
 
 	for(auto& fut : futs) {
@@ -138,7 +136,7 @@ int main(){
 	idx = 0;
 	for(;idx < splittedTexts.size() - 1; ++idx) {
 
-		it = articles.names[idx] + L"|" + articles.urls[idx] + L"|" + std::to_wstring(articles.size[idx]);
+		it = articles.names[idx] + L"|" + articles.urls[idx] + L"|" + std::to_wstring(calculateSize(articles.tokens[idx]));
 		std::transform(articles.tokens[idx].begin(),
 		 			   articles.tokens[idx].end(), it, 
 		 			   [](auto& token) {
