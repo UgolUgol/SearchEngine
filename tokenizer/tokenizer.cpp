@@ -58,7 +58,7 @@ void createBigram(Tokens& bigrams,
 
 void findBigrams(Tokens& tokens) {
 
-	size_t tokensCount = tokens.size();
+	size_t tokensCount = tokens.size() - 1;
 	if(tokensCount <= 1) {
 		return;
 	}
@@ -68,9 +68,9 @@ void findBigrams(Tokens& tokens) {
 
 	size_t bucketNum = 0;
 	size_t batchSize = tokensCount;
-	for(auto token = tokens.cbegin(); token != tokens.cend(); ++bucketNum) {
+	for(auto token = tokens.cbegin(); token != tokens.cend() - 1; ++bucketNum) {
 
-		auto rborder = std::min(batchSize - 1, static_cast<size_t>(std::distance(token, tokens.cend())) - 1);
+		auto rborder = std::min(batchSize - 1, static_cast<size_t>(std::distance(token, tokens.cend() - 1)) - 1);
 		if(!rborder) {
 			break;
 		}
