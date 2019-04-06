@@ -1,14 +1,16 @@
 #pragma once
 
-template<typename Reader, typename Sorter, typename Writer>
-class Indexer : public Reader, public Sorter<, public Writer {
+#include <string>
+
+template<typename Reader, typename InputHandler, typename Sorter, typename OutputHandler, typename Writer>
+class Indexer : public Reader, public InputHandler, public Sorter, public OutputHandler, public Writer {
 	std::string tokensFile;
 	std::string dictFile;
 	std::string coordFile;
 	std::string invCoordFile;
 	
-	using ReadResult = Reader::ReadResult;
-	using SortResult = Sorter::SortResult;
+	using SortInput = typename InputHandler::Result;
+	using WriteInput = typename OutputHandler::Result;
 public:
 
 	Indexer(const std::string&, const std::string&, const std::string&, const std::string&);

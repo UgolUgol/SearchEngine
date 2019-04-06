@@ -1,30 +1,32 @@
 #include "index_maker.h"
 
-template<typename Reader, typename Sorter, typename Writer>
-Indexer<Reader, Sorter, Writer>::Indexer(const std::string& tokensFile, 
-										 const std::string& dictFile,
-										 const std::string& coordFile,
-										 const std::string& invCoordFile) :
-										 tokensFile(tokensFile),
-										 dictFile(dictFile),
-										 coordFile(coordFile),
-										 invCoordFile(invCoordFile) { }
+template<typename Reader, typename InputHandler, typename Sorter, typename OutputHandler, typename Writer>
+Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>
+::Indexer(const std::string& tokensFile, 
+		  const std::string& dictFile,
+		  const std::string& coordFile,
+		  const std::string& invCoordFile) :
+		  tokensFile(tokensFile),
+		  dictFile(dictFile),
+		  coordFile(coordFile),
+		  invCoordFile(invCoordFile) { }
 
 
-template<typename Reader, typename Sorter, typename Writer>
-bool Indexer<Reader, Sorter, Writer>::make() {
+template<typename Reader, typename InputHandler, typename Sorter, typename OutputHandler, typename Writer>
+bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
+
+	typename Reader::OutputType data;
+	typename InputHandler::SortInput transformedData; 
 
 	Reader::openFile(tokensFile);
-	ReadResult data;
 	while(!Reader::fileEnd()) {
 
 		data += Reader::read();
+		transformedData += InputHandler::prepareForSort(data);
 
 	}
-	Reader::closeFile();
+	typename Sorter::OutputType sortedData = Sorter::sort(data);
 
-	Writer::openFiles()
-	SortResult sortedData = Sorter::sort(data);
-
-	return Writer::write(sortedData);
+	Writer::openFiles(dictFile, coordFile, invCoordFile);
+	return Writer::write(OutputHandler::prepareForWrite(sortedData));
 }

@@ -8,6 +8,7 @@
 #include <cmath>
 #include <chrono>
 #include <tools.h>
+#include <index_maker.h>
 #include <cstring>
 #include <sstream>
 #include <unistd.h>
