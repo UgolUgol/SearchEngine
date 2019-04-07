@@ -43,5 +43,4 @@ typename InputHandler::OutputType InputHandler
 }
 
 using InputType = std::tuple<std::wstring, std::wstring, std::wstring>;
-template typename InputHandler::OutputType InputHandler
-::prepareForSort<InputType>(InputType&& input);
+template typename InputHandler::OutputType InputHandler::prepareForSort<InputType>(InputType&& input);

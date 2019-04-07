@@ -15,17 +15,15 @@ Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>
 template<typename Reader, typename InputHandler, typename Sorter, typename OutputHandler, typename Writer>
 bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
 
-	typename Reader::OutputType data;
-	typename InputHandler::SortInput transformedData; 
+	typename InputHandler::OutputType transformedData; 
 
 	Reader::openFile(tokensFile);
 	while(!Reader::fileEnd()) {
 
-		data += Reader::read();
-		transformedData += InputHandler::prepareForSort(data);
+		transformedData += InputHandler::prepareForSort(Reader::read());
 
 	}
-	typename Sorter::OutputType sortedData = Sorter::sort(data);
+	typename Sorter::OutputType sortedData = Sorter::sort(transformedData);
 
 	Writer::openFiles(dictFile, coordFile, invCoordFile);
 	return Writer::write(OutputHandler::prepareForWrite(sortedData));
