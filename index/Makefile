@@ -6,6 +6,10 @@ BOOST_INCLUDE=/mnt/d/Загрузки/boost_1_55_0/build/include
 
 all: indexer
 
-indexer:
-	g++-8 -std=c++17 make_index.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
-	-L $(TOOLS_LIB) -ltools -Wl,-rpath=$(TOOLS_LIB) -I $(BOOST_INCLUDE) -I $(TOOLS_INCLUDE) 
+indexer: reader.o
+	g++-8 -std=c++17 reader.o make_index.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
+	-L $(TOOLS_LIB) -ltools -lindmaker -Wl,-rpath=$(TOOLS_LIB) -I $(BOOST_INCLUDE) -I $(TOOLS_INCLUDE) 
+
+reader.o: reader.cpp
+	g++-8 -std=c++17 -c reader.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
+	-L $(TOOLS_LIB) -ltools -lindmaker -Wl,-rpath=$(TOOLS_LIB) -I $(BOOST_INCLUDE) -I $(TOOLS_INCLUDE) 
