@@ -16,7 +16,7 @@ typename Sorter<InputType>::OutputType Sorter<InputType>
 		std::sort(input.begin(), input.end(),
 		[](const typename InputType::value_type& lhs,
 		   const typename InputType::value_type& rhs) {
-			return std::get<0>(lhs) < std::get<1>(rhs);
+			return std::get<0>(lhs) < std::get<0>(rhs);
 		});
 		return std::move(input);
 
