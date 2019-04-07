@@ -1,16 +1,8 @@
 #include "sorter.h"
 #include <algorithm>
-#include <vector>
-#include <tuple>
-
-using HashType = size_t;
-using DocId = size_t;
-using Name = std::wstring;
-using URL = std::wstring;
-using PositionType = size_t;
 
 template<typename InputType>
-typename Sorter<InputType>::OutputType Sorter<InputType>
+typename Sorter::OutputType Sorter
 ::sort(InputType& input) {
 
 		std::sort(input.begin(), input.end(),
@@ -22,4 +14,5 @@ typename Sorter<InputType>::OutputType Sorter<InputType>
 
 }
 
-template class Sorter<std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>>;
+using InputType = std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>;
+template typename Sorter::OutputType Sorter::sort<InputType>(InputType& input);
