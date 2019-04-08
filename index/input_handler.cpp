@@ -36,11 +36,5 @@ typename InputHandler::OutputType InputHandler
 	return output;
 }
 
-typename InputHandler::OutputType InputHandler
-::operator+(const typename InputHandler::OutputType& rhs) {
-
-
-}
-
 using InputType = std::tuple<std::wstring, std::wstring, std::wstring>;
 template typename InputHandler::OutputType InputHandler::prepareForSort<InputType>(InputType&& input);
