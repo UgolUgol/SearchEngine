@@ -8,7 +8,7 @@
 
 enum HeadLine : size_t { Name = 0, Url, Size};
 
-StandartReader::StandartReader() {
+StandartReader::StandartReader() : readSize(0), totalSize(0) {
 	ifs.imbue(std::locale("ru_RU.utf8"));
 }
 StandartReader::~StandartReader() {
@@ -17,11 +17,17 @@ StandartReader::~StandartReader() {
 
 bool StandartReader::openFile(const std::string& filename) {
 	ifs.open(filename);
+
+	std::wstring fileSize;
+	std::getline(ifs, fileSize);
+	std::wistringstream ss(fileSize);
+	ss >> totalSize;
+
 	return ifs.is_open();
 }
 
 bool StandartReader::isFileEnd() {
-	return ifs.eof();
+	return readSize >= totalSize;
 }
 
 typename StandartReader::OutputType StandartReader::read() {
@@ -38,5 +44,6 @@ typename StandartReader::OutputType StandartReader::read() {
 	text.assign(size - 1, L' ');
 	ifs.read(&text[0], size);
 
+	readSize += size;
 	return std::make_tuple(vHeadLine[HeadLine::Name], vHeadLine[HeadLine::Url], text);
 }

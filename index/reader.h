@@ -8,6 +8,8 @@ enum HeadLine: size_t;
 
 class StandartReader {
 	std::wifstream ifs;
+	unsigned readSize;
+	unsigned totalSize;
 public:
 	using OutputType = std::tuple<std::wstring, std::wstring, std::wstring>;
 
@@ -19,3 +21,5 @@ public:
 	OutputType read();
 
 };
+
+

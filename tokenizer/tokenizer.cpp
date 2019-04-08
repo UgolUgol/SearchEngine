@@ -20,7 +20,7 @@ bool isArticle(const std::wstring& token) {
 }
 
 
-unsigned calculateSize(Tokens& tokens) {
+unsigned calculateSize(const Tokens& tokens) {
 
 	return tokens.size() + std::accumulate(tokens.cbegin(), tokens.cend(), 0,
 	 					   [](unsigned sum, const auto& token) { return sum + token.size(); });
@@ -133,10 +133,22 @@ int main(){
 	output.imbue(std::locale("ru_RU.utf8"));
 	std::ostream_iterator<std::wstring, wchar_t, std::char_traits<wchar_t>> it(output, L"\n");
 
+	unsigned totalSize = 0;
+	std::vector<std::wstring> artSizes(splittedTexts.size() - 1);
+	std::transform(articles.tokens.cbegin(),
+	 			   articles.tokens.cend(),
+	 			   artSizes.begin(),
+				   [&totalSize](const auto& tokens){ 
+				   		auto tokensSize = calculateSize(tokens);
+				   		totalSize += tokensSize;
+				   		return std::to_wstring(tokensSize);
+				   });
+
 	idx = 0;
+	it = std::to_wstring(totalSize);
 	for(;idx < splittedTexts.size() - 1; ++idx) {
 
-		it = articles.names[idx] + L"|" + articles.urls[idx] + L"|" + std::to_wstring(calculateSize(articles.tokens[idx]));
+		it = articles.names[idx] + L"|" + articles.urls[idx] + L"|" + artSizes[idx];
 		std::transform(articles.tokens[idx].begin(),
 		 			   articles.tokens[idx].end(), it, 
 		 			   [](auto& token) {
