@@ -4,15 +4,22 @@
 #include <vector>
 #include <string>
 #include <tuple>
+#include "input_handler.h"
 
-using HashType = size_t;
-using DocId = size_t;
-using Name = std::wstring;
-using URL = std::wstring;
-using PositionType = size_t;
+namespace Sorter {
 
-class Sorter {
-public:
-	using OutputType = std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>;
-	template<typename Input> OutputType sort(Input& input);
+	using HashType = size_t;
+	using DocId = size_t;
+	using Name = std::wstring;
+	using URL = std::wstring;
+	using PositionType = size_t;
+
+
+	class QuickSorter {
+	public:
+		using OutputType = InputHandler::Output;
+		template<typename Input> OutputType sort(Input& input);
+	};
+
+
 };

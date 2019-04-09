@@ -22,7 +22,7 @@ struct TypeTraits<std::vector<T>> {
 	}
 
 	using ValueType = T;
-	enum Indexes : size_t { Hash=0, DocId, Name, Url, PositionType };
+	enum Indexes : size_t { Hash=0, DocId, Name, Url, Position };
 };
 
 
@@ -38,6 +38,10 @@ struct Output {
 	}
 	auto end() {
 		return data.end();
+	}
+
+	size_t size() {
+		return data.size();
 	}
 };
 

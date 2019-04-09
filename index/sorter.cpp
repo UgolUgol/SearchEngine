@@ -1,10 +1,10 @@
 #include "sorter.h"
 #include <algorithm>
-#include "input_handler.h"
+
+namespace Sorter {
 
 template<typename Input>
-typename Sorter::OutputType Sorter
-::sort(Input& input) {
+QuickSorter::OutputType QuickSorter::sort(Input& input) {
 
 		std::sort(input.begin(), input.end(),
 		[](const typename Input::Traits::ValueType& lhs,
@@ -15,4 +15,5 @@ typename Sorter::OutputType Sorter
 
 }
 
-template typename Sorter::OutputType Sorter::sort<InputHandler::Output>(InputHandler::Output& input);
+template typename QuickSorter::OutputType QuickSorter::sort<InputHandler::Output>(InputHandler::Output& input);
+}
