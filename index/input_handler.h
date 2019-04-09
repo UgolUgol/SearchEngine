@@ -46,7 +46,7 @@ struct Output {
 };
 
 class StandartHandler {
-	static size_t docId;
+	static DocId docId;
 public:
 	using OutputType = Output;
 	template<typename Input> OutputType prepareForSort(Input&&);

@@ -5,20 +5,20 @@
 
 namespace InputHandler {
 
-size_t StandartHandler::docId = 1;
+DocId StandartHandler::docId = 1;
 
 template<typename Input>
 StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 
 	OutputType output;
 
+	PositionType position = 1;
 	std::vector<typename Input::Traits::TokensType> tokens;
 	typename Input::Traits::NameType articleName = std::move(std::get<Input::Traits::Name>(input.data));
 	typename Input::Traits::UrlType url = std::move(std::get<Input::Traits::Url>(input.data));
 	typename Input::Traits::TokensType text = std::move(std::get<Input::Traits::Tokens>(input.data));
-	size_t position = 1;
 
-	Tools::split_regex(tokens, text.c_str(), L"\n", text.size());
+	Tools::split_regex(tokens, text.c_str(), Input::separator, text.size());
 	for(auto& token : tokens) {
 		
 		if(token == L"@dummy") {
@@ -26,7 +26,7 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 			continue;
 		}
 
-		output.data.emplace_back(std::hash<std::wstring>{}(token), 
+		output.data.emplace_back(std::hash<typename Input::Traits::TokensType>{}(token), 
 								 docId,
 								 articleName,
 								 url,

@@ -24,6 +24,7 @@ struct TypeTraits<std::tuple<T1, T2, T3>>{
 
 struct Output {
 	std::tuple<std::wstring, std::wstring, std::wstring> data;
+	static constexpr wchar_t separator[] = L"\n";
 	using Traits = TypeTraits<std::tuple<std::wstring, std::wstring, std::wstring>>;
 };
 
