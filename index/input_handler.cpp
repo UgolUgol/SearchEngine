@@ -1,21 +1,19 @@
 #include "input_handler.h"
 #include <functional>
 #include <tools.h>
-
-enum Input : size_t { ArticleName=0, Url, Tokens };
+#include "reader.h"
 
 size_t InputHandler::docId = 1;
 
-template<typename InputType>
-typename InputHandler::OutputType InputHandler
-::prepareForSort(InputType&& input) {
+template<typename Input>
+InputHandler::OutputType InputHandler::prepareForSort(Input&& input) {
 
 	OutputType output;
 
-	std::vector<std::wstring> tokens;
-	std::wstring articleName = std::move(std::get<ArticleName>(input));
-	std::wstring url = std::move(std::get<Url>(input));
-	std::wstring text = std::move(std::get<Tokens>(input));
+	std::vector<typename Input::Traits::TokensType> tokens;
+	typename Input::Traits::NameType articleName = std::move(std::get<Input::Traits::Name>(input.data));
+	typename Input::Traits::UrlType url = std::move(std::get<Input::Traits::Url>(input.data));
+	typename Input::Traits::TokensType text = std::move(std::get<Input::Traits::Tokens>(input.data));
 	size_t position = 1;
 
 	Tools::split_regex(tokens, text.c_str(), L"\n", text.size());
@@ -36,5 +34,4 @@ typename InputHandler::OutputType InputHandler
 	return output;
 }
 
-using InputType = std::tuple<std::wstring, std::wstring, std::wstring>;
-template typename InputHandler::OutputType InputHandler::prepareForSort<InputType>(InputType&& input);
+template InputHandler::OutputType InputHandler::prepareForSort<Reader::Output>(Reader::Output&& input);

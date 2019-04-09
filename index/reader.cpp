@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-
+namespace Reader {
 
 enum HeadLine : size_t { Name = 0, Url, Size};
 
@@ -18,7 +18,7 @@ StandartReader::~StandartReader() {
 bool StandartReader::openFile(const std::string& filename) {
 	ifs.open(filename);
 
-	std::wstring fileSize;
+	OutputType::Traits::TokensType fileSize;
 	std::getline(ifs, fileSize);
 	std::wistringstream ss(fileSize);
 	ss >> totalSize;
@@ -30,13 +30,13 @@ bool StandartReader::isFileEnd() {
 	return readSize >= totalSize;
 }
 
-typename StandartReader::OutputType StandartReader::read() {
+StandartReader::OutputType StandartReader::read() {
 
-	std::wstring text;
-	std::wstring headLine;
-	std::vector<std::wstring> vHeadLine; 
+	OutputType::Traits::TokensType text;
+	OutputType::Traits::TokensType headLine;
+	std::vector<OutputType::Traits::TokensType> vHeadLine; 
+
 	std::getline(ifs, headLine);
-
 	Tools::split_regex(vHeadLine, headLine.c_str(), L"|", headLine.size());
 	size_t size;
 	std::wistringstream ss(vHeadLine[HeadLine::Size]);
@@ -45,5 +45,7 @@ typename StandartReader::OutputType StandartReader::read() {
 	ifs.read(&text[0], size);
 
 	readSize += size;
-	return std::make_tuple(vHeadLine[HeadLine::Name], vHeadLine[HeadLine::Url], text);
+	return Output{ std::make_tuple(vHeadLine[HeadLine::Name], vHeadLine[HeadLine::Url], text) };
+}
+
 }

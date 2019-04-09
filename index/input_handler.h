@@ -8,9 +8,6 @@ using Name = std::wstring;
 using URL = std::wstring;
 using PositionType = size_t;
 
-enum Input : size_t;
-
-
 template<typename OutputType>
 struct Traits {};
 
@@ -27,5 +24,5 @@ class InputHandler {
 public:
 	using OutputType = std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>;
 	using OutputTraits = Traits<OutputType>;
-	template<typename InputType> OutputType prepareForSort(InputType&&);
+	template<typename Input> OutputType prepareForSort(Input&&);
 };
