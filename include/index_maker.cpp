@@ -20,11 +20,10 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
 	Reader::openFile(tokensFile);
 	while(!Reader::fileEnd()) {
 
-		InputHandler::OutputTraits::concatenate(data, Reader::read());
+		InputHandler::OutputType::Traits::concatenate(data, Reader::read());
 
 	}
-	typename Sorter::OutputType sortedData = Sorter::sort(data);
-
+	
 	Writer::openFiles(dictFile, coordFile, invCoordFile);
-	return Writer::write(OutputHandler::prepareForWrite(sortedData));
+	return Writer::write(OutputHandler::prepareForWrite(Sorter::sort(data)));
 }

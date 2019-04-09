@@ -3,10 +3,12 @@
 #include <tools.h>
 #include "reader.h"
 
-size_t InputHandler::docId = 1;
+namespace InputHandler {
+
+size_t StandartHandler::docId = 1;
 
 template<typename Input>
-InputHandler::OutputType InputHandler::prepareForSort(Input&& input) {
+StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 
 	OutputType output;
 
@@ -24,14 +26,16 @@ InputHandler::OutputType InputHandler::prepareForSort(Input&& input) {
 			continue;
 		}
 
-		output.emplace_back(std::hash<std::wstring>{}(token), 
-							docId,
-							articleName,
-							url,
-							position++);
+		output.data.emplace_back(std::hash<std::wstring>{}(token), 
+								 docId,
+								 articleName,
+								 url,
+								 position++);
 	}
 	++docId;
 	return output;
 }
 
-template InputHandler::OutputType InputHandler::prepareForSort<Reader::Output>(Reader::Output&& input);
+template StandartHandler::OutputType StandartHandler::prepareForSort<Reader::Output>(Reader::Output&& input);
+
+}

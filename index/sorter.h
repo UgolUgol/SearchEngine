@@ -14,5 +14,5 @@ using PositionType = size_t;
 class Sorter {
 public:
 	using OutputType = std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>;
-	template<typename InputType> OutputType sort(InputType& input);
+	template<typename Input> OutputType sort(Input& input);
 };

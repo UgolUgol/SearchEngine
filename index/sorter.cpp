@@ -1,18 +1,18 @@
 #include "sorter.h"
 #include <algorithm>
+#include "input_handler.h"
 
-template<typename InputType>
+template<typename Input>
 typename Sorter::OutputType Sorter
-::sort(InputType& input) {
+::sort(Input& input) {
 
 		std::sort(input.begin(), input.end(),
-		[](const typename InputType::value_type& lhs,
-		   const typename InputType::value_type& rhs) {
-			return std::get<0>(lhs) < std::get<0>(rhs);
+		[](const typename Input::Traits::ValueType& lhs,
+		   const typename Input::Traits::ValueType& rhs) {
+			return std::get<Input::Traits::Hash>(lhs) < std::get<Input::Traits::Hash>(rhs);
 		});
 		return std::move(input);
 
 }
 
-using InputType = std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>;
-template typename Sorter::OutputType Sorter::sort<InputType>(InputType& input);
+template typename Sorter::OutputType Sorter::sort<InputHandler::Output>(InputHandler::Output& input);
