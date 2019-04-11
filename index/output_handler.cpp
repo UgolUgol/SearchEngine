@@ -1,6 +1,7 @@
 #include "output_handler.h"
 #include "sorter.h"
 #include <iostream>
+#include <algorithm>
 
 namespace OutputHandler {
 
@@ -11,16 +12,24 @@ StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 	if(input.size() == 0) {
 		return {};
 	}
-
 	OutputType output;
 
-	size_t coordFileOffset = 0;;
-	size_t invCoordOffset = 0;
-	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
+	prepareIndex(input, output);
+	//prepareInvCoordFile(input, output);
+
+	return output;
+}
+
+
+template<typename Input>
+void StandartHandler::prepareIndex(Input& input, Output& output) {
 
 	decltype(auto) dictFile = std::get<OutputType::Traits::DictFile>(output.data);
 	decltype(auto) coordFile = std::get<OutputType::Traits::CoordFile>(output.data);
-	decltype(auto) invCoordFile = std::get<OutputType::Traits::InvCoordFile>(output.data);
+
+	size_t coordBlockOffsetBegin = 0;
+	size_t coordBlockOffsetLength= 0;
+	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
 
 	for(auto raw = input.begin(); raw != input.end(); ++raw) {
 
@@ -28,26 +37,42 @@ StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 		if(currentHash == nextHash) {
 
 			auto docId = std::get<Input::Traits::DocId>(*raw);
-			auto name = std::get<Input::Traits::Name>(*raw);
-			auto url = std::get<Input::Traits::Url>(*raw);
 			auto position = std::get<Input::Traits::Position>(*raw);
 
-			coordFileOffset += (sizeof(docId) + sizeof(coordFileOffset) + sizeof(position));
-			invCoordOffset += name.size() + url.size();
+			++coordBlockOffsetLength; 
 
-			coordFile.insert(coordFile.end(), {docId, invCoordOffset, position});
-			invCoordFile.insert(invCoordFile.end(), {name, url});
+			coordFile.insert(coordFile.end(), {docId, position});
 		
 		} else {
 
-			dictFile.insert(dictFile.end(), {currentHash, coordFileOffset});
+			dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, coordBlockOffsetLength});
 			currentHash = nextHash;
+			coordBlockOffsetBegin += sizeof(size_t) * coordFile.size();
+			coordBlockOffsetLength = 0;
 			--raw;
 		}
 	}
-	dictFile.insert(dictFile.end(), {currentHash, coordFileOffset});
-	return output;
+	dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, coordBlockOffsetLength});
+}
 
+
+template<typename Input>
+void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
+
+	decltype(auto) invCoordFile = std::get<OutputType::Traits::InvCoordFile>(output.data);
+
+	std::sort(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
+		return std::get<Input::Traits::DocId>(lhs) < std::get<Input::Traits::DocId>(rhs);
+	});
+
+	auto uniqueEnd = std::unique(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
+		return std::get<Input::Traits::DocId>(lhs) == std::get<Input::Traits::DocId>(rhs);
+	});
+
+	for(auto raw = input.begin(); raw != uniqueEnd; ++raw) {
+
+
+	}
 }
 
 template StandartHandler::OutputType 

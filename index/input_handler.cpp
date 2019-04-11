@@ -2,7 +2,7 @@
 #include <functional>
 #include <tools.h>
 #include "reader.h"
-
+#include <iostream>
 namespace InputHandler {
 
 DocId StandartHandler::docId = 1;
@@ -32,7 +32,10 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 								 url,
 								 position++);
 	}
-	++docId;
+	if(!output.data.empty()) {
+		++docId;
+	}
+
 	return output;
 }
 

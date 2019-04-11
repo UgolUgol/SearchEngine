@@ -20,6 +20,9 @@ input_handler.o: input_handler.cpp
 sorter.o: sorter.cpp
 	g++-8 -std=c++17 -O2 -c sorter.cpp
 
+output_handler.o: output_handler.cpp
+	g++-8 -std=c++17 -O2 -c output_handler.cpp
+
 clean:
 	rm -f *.o
 clean_all:

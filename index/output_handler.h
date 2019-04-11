@@ -34,6 +34,10 @@ public:
 
 	template<typename Input> 
 	OutputType prepareForWrite(Input&& input);
+private:
+
+	template<typename Input> void prepareIndex(Input& input, Output& output);
+	template<typename Input> void prepareInvCoordFile(Input& input, Output& output);
 };
 	
 }
