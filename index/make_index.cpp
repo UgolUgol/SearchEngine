@@ -5,7 +5,8 @@
 #include "input_handler.h"
 #include "sorter.h"
 #include "output_handler.h"
-
+#include "writer.h"
+#include <algorithm>
 class Coord {
 	int val;
 public:
@@ -19,6 +20,7 @@ int main() {
 	InputHandler::StandartHandler h;
 	Sorter::QuickSorter s;
 	OutputHandler::StandartHandler oh;
+	Writer::StandartWriter w;
 	r.openFile("tokens");
 	typename InputHandler::StandartHandler::OutputType data;
 	while(!r.isFileEnd()) {
@@ -27,6 +29,7 @@ int main() {
 
 	}
 
-	typename OutputHandler::StandartHandler::OutputType sortData = oh.prepareForWrite(s.sort(data));
+	w.openFiles("dict", "coord", "invCoord");
+	w.write(oh.prepareForWrite(s.sort(data)));
 
 }

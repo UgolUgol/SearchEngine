@@ -5,8 +5,8 @@ BOOST_INCLUDE=/home/nikita/work/ri/extern/BOOST/include
 
 all: indexer
 
-indexer: reader.o input_handler.o sorter.o
-	g++-8 -std=c++17 -O2 reader.o input_handler.o sorter.o make_index.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
+indexer: reader.o input_handler.o sorter.o output_handler.o writer.o
+	g++-8 -std=c++17 -O2 reader.o input_handler.o sorter.o output_handler.o writer.o make_index.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
 	-L $(TOOLS_LIB) -ltools -lindex_maker -Wl,-rpath=$(TOOLS_LIB) -I $(BOOST_INCLUDE) -I $(TOOLS_INCLUDE) 
 
 reader.o: reader.cpp
@@ -22,6 +22,9 @@ sorter.o: sorter.cpp
 
 output_handler.o: output_handler.cpp
 	g++-8 -std=c++17 -O2 -c output_handler.cpp
+
+writer.o: writer.cpp
+	g++-8 -std=c++17 -O2 -c writer.cpp
 
 clean:
 	rm -f *.o
