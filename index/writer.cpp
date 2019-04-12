@@ -1,5 +1,6 @@
 #include "writer.h"
 #include "output_handler.h"
+#include <iostream>
 namespace Writer {
 
 StandartWriter::StandartWriter() {
@@ -28,9 +29,19 @@ bool StandartWriter::write(Input&& input) {
 
 	auto dict = std::get<Input::Traits::DictFile>(input.data);
 	auto coord = std::get<Input::Traits::CoordFile>(input.data);
-	dictOfs.write((char*)dict.data(), sizeof(typename Input::Traits::DictType) * dict.size());
-	coordOfs.write((char*)coord.data(), sizeof(typename Input::Traits::CoordType) * coord.size());
+	auto invCoord = std::get<Input::Traits::InvCoordFile>(input.data);
 
+	dictOfs.write(reinterpret_cast<char*>(dict.data()),
+	 			  sizeof(typename Input::Traits::DictType) * dict.size());
+	coordOfs.write(reinterpret_cast<char*>(coord.data()),
+	               sizeof(typename Input::Traits::CoordType) * coord.size());
+
+	invCoordOfs.write(reinterpret_cast<char*>(&invCoord.head),
+	                  sizeof(typename Input::Traits::InvCoordType::HeadType));
+	invCoordOfs.write(reinterpret_cast<char*>(invCoord.body.data()),
+	                  sizeof(typename Input::Traits::InvCoordType::BodyType::value_type) * invCoord.body.size());
+	invCoordOfs.write(reinterpret_cast<char*>(invCoord.bottom.data()),
+				      sizeof(typename Input::Traits::InvCoordType::BottomType::value_type) * invCoord.bottom.size());
 	return true;
 }
 

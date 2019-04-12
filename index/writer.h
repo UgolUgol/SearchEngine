@@ -11,7 +11,7 @@ namespace Writer {
 class StandartWriter {
 	std::ofstream dictOfs;
 	std::ofstream coordOfs;
-	std::wofstream invCoordOfs;
+	std::ofstream invCoordOfs;
 
 	std::string directory{"files/"};
 public:

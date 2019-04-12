@@ -11,7 +11,7 @@ template<typename T>
 struct TypeTraits { };
 
 template<typename T1, typename T2, typename T3>
-struct TypeTraits<std::tuple<std::vector<T1>, std::vector<T2>, std::vector<T3>>> {
+struct TypeTraits<std::tuple<std::vector<T1>, std::vector<T2>, T3>> {
 
 	using DictType = T1;
 	using CoordType = T2;
@@ -22,9 +22,22 @@ struct TypeTraits<std::tuple<std::vector<T1>, std::vector<T2>, std::vector<T3>>>
 
 struct Output {
 
-	std::tuple<std::vector<size_t>, std::vector<size_t>, std::vector<std::wstring>> data;
-	using Traits = TypeTraits<std::tuple<std::vector<size_t>, std::vector<size_t>, std::vector<std::wstring>>>;
+	struct InvCoordFile {
 
+		using HeadType = size_t;
+		using BodyType = std::vector<size_t>;
+		using BottomType = std::wstring;
+
+		static constexpr size_t bodyBlockSize = 4;
+
+		HeadType head;
+		BodyType body;
+		BottomType bottom;
+
+	};
+
+	std::tuple<std::vector<size_t>, std::vector<size_t>, InvCoordFile> data;
+	using Traits = TypeTraits<std::tuple<std::vector<size_t>, std::vector<size_t>, InvCoordFile>>;
 };
 
 class StandartHandler {

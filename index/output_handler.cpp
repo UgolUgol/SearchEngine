@@ -15,7 +15,7 @@ StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 	OutputType output;
 
 	prepareIndex(input, output);
-	//prepareInvCoordFile(input, output);
+	prepareInvCoordFile(input, output);
 
 	return output;
 }
@@ -64,15 +64,32 @@ void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
 	std::sort(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
 		return std::get<Input::Traits::DocId>(lhs) < std::get<Input::Traits::DocId>(rhs);
 	});
-
 	auto uniqueEnd = std::unique(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
 		return std::get<Input::Traits::DocId>(lhs) == std::get<Input::Traits::DocId>(rhs);
 	});
 
-	for(auto raw = input.begin(); raw != uniqueEnd; ++raw) {
 
+	size_t docIdCount = std::distance(input.begin(), uniqueEnd);
+	OutputType::InvCoordFile::HeadType bodySize = sizeof(OutputType::InvCoordFile::BodyType::value_type) * 
+											  	  OutputType::InvCoordFile::bodyBlockSize * 
+											      docIdCount;
+
+	size_t bottomOffset = bodySize + sizeof(OutputType::InvCoordFile::BodyType::value_type);
+	size_t urlAndNameOffset = 0;
+	for(auto raw = input.begin(); raw != uniqueEnd; ++raw) {
+			
+		auto name = std::get<Input::Traits::Name>(*raw);
+		auto url = std::get<Input::Traits::Url>(*raw);
+		auto docId = std::get<Input::Traits::DocId>(*raw);
+		bottomOffset += urlAndNameOffset;
+
+		invCoordFile.body.insert(invCoordFile.body.end(), {docId, bottomOffset, name.size(), url.size()});
+		invCoordFile.bottom += (name + url);
+		urlAndNameOffset = (name.size() + url.size()) * sizeof(OutputType::InvCoordFile::BottomType::value_type);
 
 	}
+	invCoordFile.head = bodySize;
+
 }
 
 template StandartHandler::OutputType 
