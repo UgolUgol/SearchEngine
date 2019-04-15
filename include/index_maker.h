@@ -9,8 +9,6 @@ class Indexer : public Reader, public InputHandler, public Sorter, public Output
 	std::string coordFile;
 	std::string invCoordFile;
 	
-	using SortInput = typename InputHandler::Result;
-	using WriteInput = typename OutputHandler::Result;
 public:
 
 	Indexer(const std::string&, const std::string&, const std::string&, const std::string&);

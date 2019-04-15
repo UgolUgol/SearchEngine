@@ -74,6 +74,7 @@ void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
 											  	  OutputType::InvCoordFile::bodyBlockSize * 
 											      docIdCount;
 
+	std::cout<<bodySize<<std::endl;
 	size_t bottomOffset = bodySize + sizeof(OutputType::InvCoordFile::BodyType::value_type);
 	size_t urlAndNameOffset = 0;
 	for(auto raw = input.begin(); raw != uniqueEnd; ++raw) {
