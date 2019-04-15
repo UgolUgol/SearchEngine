@@ -6,7 +6,7 @@ namespace Sorter {
 template<typename Input>
 QuickSorter::OutputType QuickSorter::sort(Input& input) {
 
-		std::sort(input.begin(), input.end(),
+		std::stable_sort(input.begin(), input.end(),
 		[](const typename Input::Traits::ValueType& lhs,
 		   const typename Input::Traits::ValueType& rhs) {
 			return std::get<Input::Traits::Hash>(lhs) < std::get<Input::Traits::Hash>(rhs);

@@ -14,4 +14,5 @@ int main() {
  		    Writer::StandartWriter> indexer("tokens", "dict", "coord", "invCoord") ;
  	indexer.make();
 
+
 }
