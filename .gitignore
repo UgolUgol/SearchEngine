@@ -2,6 +2,7 @@ wiki_script/error.html
 wiki_script/res1
 tokenizer/res1_url
 tokenizer/tokens
+frequency/tokens
 index/tokens
 data.tar.gz
 tokens_data.tar.gz
