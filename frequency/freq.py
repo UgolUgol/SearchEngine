@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 regexpr1 = re.compile("^.+\\|https.+\\|.+")
 regexpr2 = re.compile(".+_.+")
 def badTokensFilter(token):
-	if regexpr1.match(token) or token == "@dummy" or regexpr2.match(token):
+	if regexpr1.match(token) or token == "@dummy\n" or regexpr2.match(token):
 		return False
 	return True
 
@@ -27,8 +27,9 @@ sortedTokens = sorted(counter_dict.items(), key = lambda kv:(kv[1], kv[0]), reve
 X = []
 Y = []
 for idx, (key, val) in enumerate(sortedTokens):
-	X.append(idx)
-	Y.append(math.log(val))
+	nIdx = idx + 1
+	Y.append(val)
+	X.append(nIdx)
 
-plt.plot(X, Y)
+plt.semilogy(X, Y)
 plt.show()
