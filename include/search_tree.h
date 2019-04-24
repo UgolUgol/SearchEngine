@@ -1,7 +1,9 @@
 #pragma once
 #include <vector>
 #include <string>
-
+#include <stack>
+#include <map>
+#include <traits_engine.h>
 
 class SearchTree {
 public:
@@ -16,15 +18,28 @@ private:
 
 
 template<typename T>
-void build(T&& expression) {
+void SearchTree::build(T&& expression) {
 
 	decltype(auto) inverseExpression = makeInverseExpression(std::forward<T>(expression));
 
 }
 
 template<typename T>
-T SearchTree::makeInverseExpression(T&& request) {
+T SearchTree::makeInverseExpression(T&& expression) {
 
-	return std::forward<T>(request);
+	using ClearType = std::decay_t<T>;
+
+	std::stack<typename ExpressionTraits<ClearType>::OperatorType> operators;
+	std::stack<typename ExpressionTraits<ClearType>::OperandType> operands;
+
+	typename ExpressionTraits<ClearType>::HandlerType handler(expression);
+	typename ExpressionTraits<ClearType>::OperandType token;
+
+	while(std::getline(handler, token, ExpressionTraits<ClearType>::ConstantsTraits::delimiter)) {
+		std::cout<<token<<std::endl;
+	} 
+
+
+	return std::forward<T>(expression);
 }
 
