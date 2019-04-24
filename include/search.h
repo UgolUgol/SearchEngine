@@ -1,6 +1,7 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <search_tree.h>
 
 namespace Traits {
 
@@ -11,7 +12,7 @@ namespace Traits {
 	};
 
 	template<typename CharT> 
-	struct is_string<std::basic_string<CharT>, std::char_traits<CharT>> {
+	struct is_string<std::basic_string<CharT>> {
 		static constexpr bool v = true;
 	};
 
@@ -40,10 +41,12 @@ namespace Search {
 
 	class RequestHandler {
 	public:
-		template<typename T> std::vector<Repsonse> search(T&& request);  
+		template<typename T> std::vector<Response> search(T&& request);  
 
 	private:
 		template<typename T> T makeInverseExpression(T&& request);
+		std::vector<Response> extractFromTree();
+
 		SearchTree tree;
 	};
 
@@ -55,21 +58,17 @@ namespace Search {
 		using ClearType = std::decay_t<T>;
 		if constexpr(Traits::is_string_v<ClearType>) {
 
-			auto inverseExpression = makeInverseExpression(std::forward<T>(request));
-			tree.build(inverseExpression);
+			tree.build(std::forward<T>(request));
 
 		} 
 
-		return tree.get();
+		return extractFromTree();
 	}
 
 
-	template<typename T>
-	T RequestHandler::makeInverseExpression(T&& request) {
-
-
-
-		return std::forward<T>(request);
+	std::vector<Response> RequestHandler::extractFromTree() {
+		
+		return {};
 	}
 
 };
