@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <cstring>
 namespace Traits {
 
 
@@ -39,8 +40,6 @@ namespace Traits {
 
 }
 
-
-
 namespace details {
 
 	template<typename T> struct ConstantsTraits { };
@@ -48,52 +47,59 @@ namespace details {
 	template<> 
 	struct ConstantsTraits<char> {
 
-
-		using OperatorType = std::pair<const char*, size_t>;
-
-		static constexpr const OperatorType _and = {"&&", 2};
-		static constexpr const OperatorType _or = {"||", 1};
-		static constexpr const OperatorType _not = {"!", 3};
-		static constexpr const OperatorType _leftBracket = {"(", 0};
-		static constexpr const OperatorType _rightBracket = {")", 0};
+		static const std::map<std::basic_string<char>, size_t> operators;
+		static const std::map<std::basic_string<char>, size_t> brackets;
 		static constexpr const char delimiter = ' ';
 
+	};
+	const std::map<std::basic_string<char>, size_t> ConstantsTraits<char>::operators = { 
+		{"!", 3},
+		{"&&", 2},
+		{"||", 1}
+	};
+	const std::map<std::basic_string<char>, size_t> ConstantsTraits<char>::brackets = { 
+		{"(", 0},
+		{")", 0}
 	};
 
 	template<>
 	struct ConstantsTraits<wchar_t> {
 
-		using OperatorType = std::pair<const wchar_t*, size_t>;
-
-		static constexpr const OperatorType _and = {L"&&", 2};
-		static constexpr const OperatorType _or = {L"||", 1};
-		static constexpr const OperatorType _not = {L"!", 3};
-		static constexpr const OperatorType _leftBracket = {L"(", 0};
-		static constexpr const OperatorType _rightBracket = {L")", 0};
+		static const std::map<std::basic_string<wchar_t>, size_t> operators;
+		static const std::map<std::basic_string<wchar_t>, size_t> brackets;
 		static constexpr const wchar_t delimiter = L' ';
 
 	};
+	const std::map<std::basic_string<wchar_t>, size_t> ConstantsTraits<wchar_t>::operators = { 
+		{L"!", 3},
+		{L"&&", 2},
+		{L"||", 1}
+	};
+	const std::map<std::basic_string<wchar_t>, size_t> ConstantsTraits<wchar_t>::brackets = { 
+		{L"(", 0},
+		{L")", 0}
+	};
+}
+
+
+namespace functions {
+
 
 	template<typename T> 
 	bool isOperator(const std::basic_string<T>& token) {
 
-		return token == ConstantsTraits<T>::_and ||
-		 	   token == ConstantsTraits<T>::_or ||
-		 	   token == ConstantsTraits<T>::_not;
+		return true;
 
 	}
 
 	template<typename T>
 	bool isOperand(const std::basic_string<T>& token) {
 
-		return !isOperator(token) &&
-		 		token != ConstantsTraits<T>::_leftBracket &&
-		 		token != ConstantsTraits<T>::_rightBracket;
+		return true;
 
 	}
 
-
-}
+};
 
 template<typename T> struct ExpressionTraits { };
 
@@ -101,18 +107,19 @@ template<typename T>
 struct ExpressionTraits<std::basic_string<T>> {
 	
 	using ConstantsTraits = details::ConstantsTraits<T>;
-	using OperatorType = typename ConstantsTraits::OperatorType;
+	using OperatorType = std::basic_string<T>;
 	using OperandType = std::basic_string<T>;
 	using UnderlyingType = T;
 	using HandlerType = std::basic_stringstream<T>;
 
 };
 
+
 template<typename T> 
 struct ExpressionTraits<const T*> {
 	
 	using ConstantsTraits = details::ConstantsTraits<T>;
-	using OperatorType = typename ConstantsTraits::OperatorType;
+	using OperatorType = std::basic_string<T>;
 	using OperandType = std::basic_string<T>;
 	using UnderlyingType = T;
 	using HandlerType = std::basic_stringstream<T>;
@@ -124,7 +131,7 @@ template<typename T>
 struct ExpressionTraits<T*> {
 	
 	using ConstantsTraits = details::ConstantsTraits<T>;
-	using OperatorType = typename ConstantsTraits::OperatorType;
+	using OperatorType = std::basic_string<T>;
 	using OperandType = std::basic_string<T>;
 	using UnderlyingType = T;
 	using HandlerType = std::basic_stringstream<T>;
