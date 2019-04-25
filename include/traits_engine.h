@@ -118,7 +118,7 @@ namespace functions {
 	template<typename T> 
 	size_t getPriority(const std::basic_string<T>& token) 
 	{ 
-		return details::ConstantsTraits<T>::operators.find(token).second;
+		return details::ConstantsTraits<T>::operators.find(token)->second;
 	}
 
 
@@ -153,7 +153,8 @@ struct ExpressionTraits<const T*>
 
 
 template<typename T> 
-struct ExpressionTraits<T*> {
+struct ExpressionTraits<T*> 
+{
 	
 	using ConstantsTraits = details::ConstantsTraits<T>;
 	using OperatorType = std::basic_string<T>;

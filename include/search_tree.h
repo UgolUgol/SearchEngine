@@ -36,10 +36,43 @@ T SearchTree::makeInverseExpression(T&& expression) {
 	typename ExpressionTraits<ClearType>::OperandType token;
 
 	while(std::getline(handler, token, ExpressionTraits<ClearType>::ConstantsTraits::delimiter)) {
-		std::cout<<token<<std::endl;
+		
+		if(functions::isOperator(token)) {
+
+			if(operators.empty()) {
+
+				operators.push(std::move(token));
+
+			} else {
+
+				while(!operators.empty() && functions::getPriority(token) <= functions::getPriority(operators.top())) {
+
+					operands.push(operators.top());
+					operators.pop();
+
+				}
+
+				operators.push(token);
+
+			}
+		} else if(functions::isOperand(token)) {
+
+			operands.push(std::move(token));
+
+		}
 	} 
 
+	while(!operators.empty()) {
 
+		operands.push(std::move(operators.top()));
+		operators.pop();
+
+	}
+
+	while(!operands.empty()) {
+		std::cout<<operands.top();
+		operands.pop();
+	}
 	return std::forward<T>(expression);
 }
 
