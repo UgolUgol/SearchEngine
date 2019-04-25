@@ -48,50 +48,55 @@ namespace Traits {
 
 namespace details 
 {
+	enum class OperatorType : size_t { _not, _and, _or, _leftBracket, _rightBracket };
+	template<typename T> using OperatorsMap = std::map<std::basic_string<T>, std::pair<size_t, OperatorType>>;
 
-	template<typename T> struct ConstantsTraits { };
-
+	template<typename T>
+	struct ConstantsTraits { };
+	
 	template<> 
 	struct ConstantsTraits<char> 
 	{
 
-		static const std::map<std::basic_string<char>, size_t> operators;
-		static const std::map<std::basic_string<char>, size_t> brackets;
+		static const OperatorsMap<char> operators;
+		static const OperatorsMap<char> brackets;
 		static constexpr const char delimiter = ' ';
 
 	};
-	const std::map<std::basic_string<char>, size_t> ConstantsTraits<char>::operators = 
+	const OperatorsMap<char> ConstantsTraits<char>::operators = 
 	{ 
-		{"!", 3},
-		{"&&", 2},
-		{"||", 1}
+		{"!", {3, OperatorType::_not}},
+		{"&&", {2, OperatorType::_and}},
+		{"||", {1, OperatorType::_or}}
 	};
-	const std::map<std::basic_string<char>, size_t> ConstantsTraits<char>::brackets = 
+	const OperatorsMap<char> ConstantsTraits<char>::brackets = 
 	{ 
-		{"(", 0},
-		{")", 0}
+		{"(", {0, OperatorType::_leftBracket}},
+		{")", {0, OperatorType::_rightBracket}}
 	};
+
 
 	template<>
 	struct ConstantsTraits<wchar_t> 
 	{
 
-		static const std::map<std::basic_string<wchar_t>, size_t> operators;
-		static const std::map<std::basic_string<wchar_t>, size_t> brackets;
+		static const OperatorsMap<wchar_t> operators;
+		static const OperatorsMap<wchar_t> brackets;
 		static constexpr const wchar_t delimiter = L' ';
 
 	};
-	const std::map<std::basic_string<wchar_t>, size_t> ConstantsTraits<wchar_t>::operators = 
+	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::operators = 
 	{ 
-		{L"!", 3},
-		{L"&&", 2},
-		{L"||", 1}
+		{L"!", {3, OperatorType::_not}},
+		{L"&&", {2, OperatorType::_and}},
+		{L"||", {1, OperatorType::_or}}
 	};
-	const std::map<std::basic_string<wchar_t>, size_t> ConstantsTraits<wchar_t>::brackets = 
+	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::brackets = 
 	{ 
-		{L"(", 0},
-		{L")", 0}
+		{L"(", {0, OperatorType::_leftBracket}},
+		{L")", {0, OperatorType::_rightBracket}}
 	};
+
 }
 
 
@@ -118,7 +123,7 @@ namespace functions {
 	template<typename T> 
 	size_t getPriority(const std::basic_string<T>& token) 
 	{ 
-		return details::ConstantsTraits<T>::operators.find(token)->second;
+		return details::ConstantsTraits<T>::operators.find(token)->second.first;
 	}
 
 
