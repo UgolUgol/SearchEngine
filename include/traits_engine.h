@@ -125,6 +125,11 @@ namespace functions {
 	{ 
 		return details::ConstantsTraits<T>::operators.find(token)->second.first;
 	}
+	template<typename T>
+	details::OperatorType getType(const std::basic_string<T>& token)
+	{
+		return details::ConstantsTraits<T>::operators.find(token)->second.second;
+	}
 
 
 };
