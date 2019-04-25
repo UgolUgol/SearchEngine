@@ -40,19 +40,24 @@ namespace details {
 		static constexpr const char* _and = "&&";
 		static constexpr const char* _or = "||";
 		static constexpr const char* _not = "!";
+		static constexpr const char* _leftBracket = "(";
+		static constexpr const char* _rightBracket = ")";
 		static constexpr const char delimiter = ' ';
-
 	};
+
 	template<>
 	struct ConstantsTraits<wchar_t> {
 
 		static constexpr const wchar_t* _and = L"&&";
 		static constexpr const wchar_t* _or = L"||";
 		static constexpr const wchar_t* _not = L"!";
+		static constexpr const wchar_t* _leftBracket = L"(";
+		static constexpr const wchar_t* _rightBracket = L")";
 		static constexpr const wchar_t delimiter = L' ';
 
 	};
 
+	enum class Priority : size_t { _not=3, _and=2, _or=1, _leftBracket=0, _rightBracket=0 };
 }
 
 template<typename T> struct ExpressionTraits { };
