@@ -127,8 +127,14 @@ namespace functions {
 	}
 	template<typename T>
 	details::OperatorType getType(const std::basic_string<T>& token)
-	{
-		return details::ConstantsTraits<T>::operators.find(token)->second.second;
+	{	
+		auto op = details::ConstantsTraits<T>::operators.find(token);
+		if(op == details::ConstantsTraits<T>::operators.cend()) {
+
+			op = details::ConstantsTraits<T>::brackets.find(token);
+
+		}
+		return op->second.second;
 	}
 
 
