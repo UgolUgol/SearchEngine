@@ -12,7 +12,7 @@ public:
 
 	template<typename T> void build(T&& expression);
 private:
-	template<typename T> T makeInverseExpression(T&& expression);
+	template<typename T> auto makeInverseExpression(T&& expression);
 };
 
 
@@ -25,12 +25,12 @@ void SearchTree::build(T&& expression) {
 }
 
 template<typename T>
-T SearchTree::makeInverseExpression(T&& expression) {
+auto SearchTree::makeInverseExpression(T&& expression) {
 
 	using ClearType = std::decay_t<T>;
 
 	std::stack<typename ExpressionTraits<ClearType>::OperatorType> operators;
-	std::stack<typename ExpressionTraits<ClearType>::OperandType> operands;
+	std::vector<typename ExpressionTraits<ClearType>::OperandType> operands;
 
 	typename ExpressionTraits<ClearType>::HandlerType handler(expression);
 	typename ExpressionTraits<ClearType>::OperandType token;
@@ -47,7 +47,7 @@ T SearchTree::makeInverseExpression(T&& expression) {
 
 				while(!operators.empty() && functions::getPriority(token) <= functions::getPriority(operators.top())) {
 
-					operands.push(operators.top());
+					operands.push_back(operators.top());
 					operators.pop();
 
 				}
@@ -57,22 +57,21 @@ T SearchTree::makeInverseExpression(T&& expression) {
 			}
 		} else if(functions::isOperand(token)) {
 
-			operands.push(std::move(token));
+			operands.push_back(std::move(token));
 
+		} else {
+			
 		}
 	} 
 
 	while(!operators.empty()) {
 
-		operands.push(std::move(operators.top()));
+		operands.push_back(std::move(operators.top()));
 		operators.pop();
 
 	}
 
-	while(!operands.empty()) {
-		std::cout<<operands.top();
-		operands.pop();
-	}
-	return std::forward<T>(expression);
+
+	return operands;
 }
 
