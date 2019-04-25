@@ -24,6 +24,17 @@ namespace Traits {
 		static constexpr bool value = true;
 	};
 
+
+	template<> 
+	struct is_string<wchar_t*> {
+		static constexpr bool value = true;
+	};
+
+	template<>
+	struct is_string<const wchar_t*> {
+		static constexpr bool value = true;
+	};
+
 	template<typename T> inline constexpr bool is_string_v = is_string<T>::value;
 
 }
