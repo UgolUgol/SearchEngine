@@ -20,7 +20,7 @@ private:
 template<typename T>
 void SearchTree::build(T&& expression) {
 
-	decltype(auto) inverseExpression = makeInverseExpression(std::forward<T>(expression));
+	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
 
 }
 
@@ -45,7 +45,8 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 
 			} else {
 
-				while(!operators.empty() && functions::getPriority(token) <= functions::getPriority(operators.top())) {
+				while(!operators.empty() &&
+				      functions::getPriority(token) <= functions::getPriority(operators.top())) {
 
 					operands.push_back(operators.top());
 					operators.pop();
@@ -61,6 +62,22 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 
 		} else {
 			
+			if(functions::getType(token) == details::OperatorType::_leftBracket) {
+
+				operators.push(std::move(token));
+				
+			} else {
+
+				while(!operators.empty() && 
+					  functions::getType(operators.top()) != details::OperatorType::_leftBracket) {
+
+					operands.push_back(operators.top());
+					operators.pop();
+
+				}
+				operators.pop();
+
+			}
 		}
 	} 
 
