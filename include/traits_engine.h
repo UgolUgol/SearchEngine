@@ -69,6 +69,26 @@ namespace details {
 	};
 
 	enum class Priority : size_t { _not=3, _and=2, _or=1, _leftBracket=0, _rightBracket=0 };
+
+	template<typename T> 
+	bool isOperator(const std::basic_string<T>& token) {
+
+		return token == ConstantsTraits<T>::_and ||
+		 	   token == ConstantsTraits<T>::_or ||
+		 	   token == ConstantsTraits<T>::_not;
+
+	}
+
+	template<typename T>
+	bool isOperand(const std::basic_string<T>& token) {
+
+		return !isOperator(token) &&
+		 		token != ConstantsTraits<T>::_leftBracket &&
+		 		token != ConstantsTraits<T>::_rightBracket;
+
+	}
+
+
 }
 
 template<typename T> struct ExpressionTraits { };
