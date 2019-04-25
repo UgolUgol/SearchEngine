@@ -88,14 +88,15 @@ namespace functions {
 	template<typename T> 
 	bool isOperator(const std::basic_string<T>& token) {
 
-		return true;
+		return details::ConstantsTraits<T>::operators.find(token) != details::ConstantsTraits<T>::operators.cend();
 
 	}
 
 	template<typename T>
 	bool isOperand(const std::basic_string<T>& token) {
 
-		return true;
+		return !isOperator(token) && 
+			   details::ConstantsTraits<T>::brackets.find(token) == details::ConstantsTraits<T>::brackets.cend();
 
 	}
 
