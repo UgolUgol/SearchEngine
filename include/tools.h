@@ -14,7 +14,7 @@ namespace Tools {
 		std::vector<Tokens> tokens;
 	};
 
-	extern std::wstring readData(std::string filename);
-	extern void split_regex(Tokens& dest, const wchar_t* src, const wchar_t* breakset, size_t srcSize);
+	std::wstring readData(std::string filename);
+	void split_regex(Tokens& dest, const wchar_t* src, const wchar_t* breakset, size_t srcSize);
 	
 }

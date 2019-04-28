@@ -3,5 +3,6 @@ wiki_script/res1
 tokenizer/res1_url
 tokenizer/tokens
 index/tokens
+index/files
 data.tar.gz
 tokens_data.tar.gz
