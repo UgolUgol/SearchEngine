@@ -6,5 +6,5 @@ BOOST_INCLUDE=${BOOST_PATH}/include
 all: tokenizer
 
 tokenizer:
-	g++-8 -std=c++17 tokenizer.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
+	g++ -std=c++17 tokenizer.cpp -L $(BOOST_LIB) -lboost_regex -Wl,-rpath=$(BOOST_LIB) \
 	-L $(TOOLS_LIB) -ltools -Wl,-rpath=$(TOOLS_LIB) -I $(BOOST_INCLUDE) -I $(TOOLS_INCLUDE) -pthread
