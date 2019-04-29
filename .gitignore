@@ -4,5 +4,7 @@ tokenizer/res1_url
 tokenizer/tokens
 index/tokens
 index/files
+include/object_files/*.o
+lib/*.so
 data.tar.gz
 tokens_data.tar.gz
