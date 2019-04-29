@@ -47,7 +47,7 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 
 			dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, coordBlockOffsetLength});
 			currentHash = nextHash;
-			coordBlockOffsetBegin += sizeof(size_t) * coordFile.size();
+			coordBlockOffsetBegin = sizeof(size_t) * coordFile.size();
 			coordBlockOffsetLength = 0;
 			--raw;
 		}
