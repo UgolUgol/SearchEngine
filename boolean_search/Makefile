@@ -5,5 +5,8 @@ BOOST_INCLUDE=${BOOST_PATH}/include
 
 all: searcher
 
-searcher:
-	g++ -std=c++17 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) make_search.cpp -lstdc++fs -o search 
+searcher: index.o
+	g++ -std=c++17 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) $(TOOLS_INCLUDE)/object_files/index.o make_search.cpp -o search 
+
+index.o: $(TOOLS_INCLUDE)/index.cpp
+	g++ -std=c++17 -I $(BOOST_INCLUDE) -c $(TOOLS_INCLUDE)/index.cpp -o $(TOOLS_INCLUDE)/object_files/index.o
