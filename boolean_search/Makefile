@@ -10,3 +10,9 @@ searcher: index.o
 
 index.o: $(TOOLS_INCLUDE)/index.cpp
 	g++ -std=c++17 -I $(BOOST_INCLUDE) -c $(TOOLS_INCLUDE)/index.cpp -o $(TOOLS_INCLUDE)/object_files/index.o
+
+clean:
+	rm -f $(TOOLS_INCLUDE)/object_files/index.o
+clean_all:
+	rm -f $(TOOLS_INCLUDE)/object_files/index.o *.out
+
