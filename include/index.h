@@ -28,11 +28,22 @@ public:
 
 	Index& operator=(const Index&) = delete;
 	Index& operator=(Index&&) = default;
-	DictionaryIterator dictionaryBegin();
-	DictionaryIterator dictionaryEnd();
 
-	CoordinateBlocksIterator coordBegin();
-	CoordinateBlocksIterator coordEnd();
+	auto dictionaryBegin() {
+		return DictionaryIterator(mappedDict.get_address());
+	}
+	auto dictionaryEnd() {
+		auto raw_ptr = reinterpret_cast<char*>(mappedDict.get_address()) + mappedDict.get_size();
+		return DictionaryIterator(static_cast<void*>(raw_ptr));
+	}
+
+	auto coordBegin() {
+		return CoordinateBlocksIterator(mappedDict.get_address());
+	}
+	auto coordEnd() {
+		auto raw_ptr = reinterpret_cast<char*>(mappedCoord.get_address()) + mappedCoord.get_size();
+		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
+	}
 
 private:
 	boost::interprocess::file_mapping dict, coord, invCoord;
