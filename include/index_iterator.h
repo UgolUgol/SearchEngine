@@ -12,7 +12,7 @@ public:
 	using pointer = NodeType*;
 	using reference = NodeType&;
 
-
+	IndexIterator();
 	IndexIterator(void* ptr);
 	IndexIterator(NodeType* ptr);
 	~IndexIterator() = default;
@@ -44,6 +44,10 @@ public:
 private:
 	NodeType* ptr;
 };
+
+
+template<typename NodeType, size_t NodeSize>
+IndexIterator<NodeType, NodeSize>::IndexIterator() : ptr(nullptr) { }
 
 template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize>::IndexIterator(void* ptr) : ptr(reinterpret_cast<NodeType*>(ptr)) { }
@@ -105,7 +109,7 @@ template<typename NodeType, size_t NodeSize>
 const IndexIterator<NodeType, NodeSize>& IndexIterator<NodeType, NodeSize>
 ::operator=(const IndexIterator<NodeType, NodeSize>& iterator) {
 
-	this->ptr = iterator->ptr;
+	this->ptr = iterator.ptr;
 	return *this;
 
 }
