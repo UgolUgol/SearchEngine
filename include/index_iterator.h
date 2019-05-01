@@ -33,9 +33,13 @@ public:
 	NodeType& operator->() const;
 	NodeType& operator[](size_t idx) const;
 
-/*	friend bool operator==(const IndexIterator<NodeType, NodeSize>&, const IndexIterator<NodeType, NodeSize>&);
+	friend bool operator==(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+		return lhs.ptr == rhs.ptr;
+	}
 
-	friend bool operator!=(const IndexIterator<NodeType, NodeSize>&, const IndexIterator<NodeType, NodeSize>&);*/
+	friend bool operator!=(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+		return !(lhs.ptr == rhs.ptr);
+	}
 	
 private:
 	NodeType* ptr;
@@ -136,13 +140,3 @@ template<typename NodeType, size_t NodeSize>
 NodeType& IndexIterator<NodeType, NodeSize>::operator[](size_t idx) const {
 	return *(*this + idx);
 }
-
-/*template<typename NodeType, size_t NodeSize>
-friend bool operator==(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
-	return lhs.ptr == rhs.ptr;
-}
-
-template<typename NodeType, size_t NodeSize>
-friend bool operator!=(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
-	return !(lhs.ptr == rhs.ptr);
-}*/
