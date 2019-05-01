@@ -1,7 +1,7 @@
 #include "index.h"
 
-template<size_t DictNodeSize, size_t CoordNodeSize>
-Index<DictNodeSize, CoordNodeSize>::Index(const char* dictFile, 
+template<typename NodeType, size_t DictNodeSize, size_t CoordNodeSize>
+Index<NodeType, DictNodeSize, CoordNodeSize>::Index(const char* dictFile, 
 										  const char* coordFile,
 										  const char* invCoordFile) : 
 										  dict(dictFile, boost::interprocess::read_write),
@@ -13,5 +13,4 @@ Index<DictNodeSize, CoordNodeSize>::Index(const char* dictFile,
 
 										  }
 
-
-template class Index<DefaultIndex::DictNodeSize, DefaultIndex::CoordNodeSize>;
+template class Index<DefaultIndex::NodeType, DefaultIndex::DictNodeSize, DefaultIndex::CoordNodeSize>;
