@@ -42,7 +42,7 @@ private:
 };
 
 template<typename NodeType, size_t NodeSize>
-IndexIterator<NodeType, NodeSize>::IndexIterator(void* ptr) : ptr(reinterpret_cast<NodeType>(ptr)) { }
+IndexIterator<NodeType, NodeSize>::IndexIterator(void* ptr) : ptr(reinterpret_cast<NodeType*>(ptr)) { }
 
 template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize>::IndexIterator(NodeType* ptr) : ptr(ptr) { }
@@ -54,6 +54,7 @@ IndexIterator<NodeType, NodeSize>& IndexIterator<NodeType, NodeSize>::operator++
 	return *this;
 
 }
+
 template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize> IndexIterator<NodeType, NodeSize>::operator++(int){
 	
