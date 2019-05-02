@@ -35,6 +35,7 @@ public:
 	NodeType& operator->() const;
 	NodeType& operator[](size_t idx) const;
 
+
 	friend bool operator==(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
 		return lhs.ptr == rhs.ptr;
 	}
@@ -44,11 +45,10 @@ public:
 	}
 
 	friend difference_type operator-(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
-
 		return (lhs.ptr - rhs.ptr) / NodeSize;
-
 	}
 	
+	RawMemory rawPointer() const { return ptr; };
 private:
 	RawMemory ptr;
 };
