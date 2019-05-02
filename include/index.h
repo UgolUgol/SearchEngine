@@ -78,6 +78,8 @@ public:
 		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
 	}
 
+	DictionaryOffsetNodeType getOffset(DictionaryIterator iterator);
+	DictionaryLengthNodeType getLength(DictionaryIterator iterator);
 
 private:
 	boost::interprocess::file_mapping dict, coord, invCoord;

@@ -14,4 +14,24 @@ Index<IndexType>::Index(const char* dictFile,
 						mappedInvCoord(invCoord, boost::interprocess::read_write) { }
 
 
+
+template<typename IndexType> 
+typename Index<IndexType>::DictionaryOffsetNodeType 
+Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterator) {
+
+	auto offset = IndexTraits<IndexType>::Dictionary::CoordOffset::Offset;
+	return *(iterator.rawPointer() + offset);
+
+}
+
+
+template<typename IndexType> 
+typename Index<IndexType>::DictionaryLengthNodeType 
+Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) {
+
+	auto offset = IndexTraits<IndexType>::Dictionary::Length::Offset;
+	return *(iterator.rawPointer() + offset);
+
+}
+
 template class Index<DefaultIndex>;
