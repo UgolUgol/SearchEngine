@@ -50,5 +50,18 @@ private:
 	boost::interprocess::mapped_region mappedDict, mappedCoord, mappedInvCoord;
 };
 
+namespace algorithms {
 
+		template<typename InputIterator> 
+		InputIterator findHash(InputIterator begin, InputIterator end, const typename InputIterator::value_type& hash) {
+
+			auto range = std::equal_range(begin, end, hash);
+			if(range.first == range.second) {
+				return end;
+			}
+			return range.first;
+		}
+
+
+}
 

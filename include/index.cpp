@@ -1,4 +1,6 @@
 #include "index.h"
+#include <algorithm>
+
 
 template<typename NodeType, size_t DictNodeSize, size_t CoordNodeSize>
 Index<NodeType, DictNodeSize, CoordNodeSize>::Index(const char* dictFile, 
