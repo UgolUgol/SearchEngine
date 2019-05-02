@@ -57,7 +57,7 @@ public:
 	Index() = delete;
 	Index(const Index&) = delete;
 	Index(Index&&) = default;
-	Index(const char*, const char*, const char*);
+	Index(const char*, const char*);
 
 	Index& operator=(const Index&) = delete;
 	Index& operator=(Index&&) = default;
@@ -82,8 +82,8 @@ public:
 	DictionaryLengthNodeType getLength(DictionaryIterator iterator);
 
 private:
-	boost::interprocess::file_mapping dict, coord, invCoord;
-	boost::interprocess::mapped_region mappedDict, mappedCoord, mappedInvCoord;
+	boost::interprocess::file_mapping dict, coord;
+	boost::interprocess::mapped_region mappedDict, mappedCoord;
 };
 
 namespace algorithms {

@@ -4,15 +4,11 @@
 
 template<typename IndexType>
 Index<IndexType>::Index(const char* dictFile, 
-					    const char* coordFile,
-						const char* invCoordFile) : 
+					    const char* coordFile) : 
 						dict(dictFile, boost::interprocess::read_write),
 						coord(coordFile, boost::interprocess::read_write),
-						invCoord(invCoordFile, boost::interprocess::read_write),
 						mappedDict(dict, boost::interprocess::read_write),
-						mappedCoord(coord, boost::interprocess::read_write),
-						mappedInvCoord(invCoord, boost::interprocess::read_write) { }
-
+						mappedCoord(coord, boost::interprocess::read_write) { }
 
 
 template<typename IndexType> 
@@ -20,7 +16,9 @@ typename Index<IndexType>::DictionaryOffsetNodeType
 Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterator) {
 
 	auto offset = IndexTraits<IndexType>::Dictionary::CoordOffset::Offset;
-	return *(iterator.rawPointer() + offset);
+	auto blockSize = IndexTraits<IndexType>::CoordinateFile::NodeSize;
+
+	return (*reinterpret_cast<Index<IndexType>::DictionaryOffsetNodeType*>(iterator.rawPointer() + offset)) / blockSize;
 
 }
 
@@ -30,7 +28,7 @@ typename Index<IndexType>::DictionaryLengthNodeType
 Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) {
 
 	auto offset = IndexTraits<IndexType>::Dictionary::Length::Offset;
-	return *(iterator.rawPointer() + offset);
+	return *reinterpret_cast<Index<IndexType>::DictionaryLengthNodeType*>(iterator.rawPointer() + offset);
 
 }
 
