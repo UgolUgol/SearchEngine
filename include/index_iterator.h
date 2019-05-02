@@ -8,7 +8,7 @@ class IndexIterator {
 public:
 	using iterator_category = std::random_access_iterator_tag;
 	using value_type = NodeType;
-	using difference_type = NodeType;
+	using difference_type = size_t;
 	using pointer = NodeType*;
 	using reference = NodeType&;
 
@@ -39,6 +39,12 @@ public:
 
 	friend bool operator!=(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
 		return !(lhs.ptr == rhs.ptr);
+	}
+
+	friend difference_type operator-(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+
+		return (lhs.ptr - rhs.ptr) / NodeSize;
+
 	}
 	
 private:
