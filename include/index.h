@@ -44,11 +44,15 @@ struct IndexTraits<DefaultIndex> {
 template<typename IndexType = DefaultIndex>
 class Index {
 public:
-	using DictionaryIterator = IndexIterator<typename IndexTraits<IndexType>::Dictionary::Type, 
-											 IndexTraits<IndexType>::Dictionary::NodeSize>;
-											 
-	using CoordinateBlocksIterator = IndexIterator<typename IndexTraits<IndexType>::CoordinateFile::Type,
-												   IndexTraits<IndexType>::CoordinateFile::NodeSize>;
+
+	using DictionaryNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
+	using CoordinateFileNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
+	using DictionaryOffsetNodeType = typename IndexTraits<IndexType>::Dictionary::CoordOffset::Type;
+	using DictionaryLengthNodeType = typename IndexTraits<IndexType>::Dictionary::Length::Type;
+	using CoordinateFilePositionNodeType = typename IndexTraits<IndexType>::CoordinateFile::Position::Type;
+
+	using DictionaryIterator = IndexIterator<DictionaryNodeType, IndexTraits<IndexType>::Dictionary::NodeSize>;
+	using CoordinateBlocksIterator = IndexIterator<CoordinateFileNodeType, IndexTraits<IndexType>::CoordinateFile::NodeSize>;
 
 	Index() = delete;
 	Index(const Index&) = delete;
@@ -74,6 +78,7 @@ public:
 		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
 	}
 
+
 private:
 	boost::interprocess::file_mapping dict, coord, invCoord;
 	boost::interprocess::mapped_region mappedDict, mappedCoord, mappedInvCoord;
@@ -88,6 +93,7 @@ namespace algorithms {
 			if(range.first == range.second) {
 				return end;
 			}
+
 			return range.first;
 		}
 

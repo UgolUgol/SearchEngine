@@ -13,4 +13,5 @@ Index<IndexType>::Index(const char* dictFile,
 						mappedCoord(coord, boost::interprocess::read_write),
 						mappedInvCoord(invCoord, boost::interprocess::read_write) { }
 
+
 template class Index<DefaultIndex>;
