@@ -71,7 +71,7 @@ public:
 	}
 
 	auto coordBegin() {
-		return CoordinateBlocksIterator(mappedDict.get_address());
+		return CoordinateBlocksIterator(mappedCoord.get_address());
 	}
 	auto coordEnd() {
 		auto raw_ptr = reinterpret_cast<RawMemory>(mappedCoord.get_address()) + mappedCoord.get_size();
