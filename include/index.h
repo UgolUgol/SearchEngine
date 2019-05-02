@@ -7,8 +7,9 @@
 
 
 struct DefaultIndex {
-	static constexpr size_t DictNodeSize = 3;
-	static constexpr size_t CoordNodeSize = 2;
+	static constexpr size_t DictNodeSize = 3 * sizeof(size_t);
+	static constexpr size_t CoordNodeSize = 2 * sizeof(size_t);
+
 	using NodeType = size_t;
 };
 
@@ -33,7 +34,7 @@ public:
 		return DictionaryIterator(mappedDict.get_address());
 	}
 	auto dictionaryEnd() {
-		auto raw_ptr = reinterpret_cast<char*>(mappedDict.get_address()) + mappedDict.get_size();
+		auto raw_ptr = reinterpret_cast<RawMemory>(mappedDict.get_address()) + mappedDict.get_size();
 		return DictionaryIterator(static_cast<void*>(raw_ptr));
 	}
 
@@ -41,7 +42,7 @@ public:
 		return CoordinateBlocksIterator(mappedDict.get_address());
 	}
 	auto coordEnd() {
-		auto raw_ptr = reinterpret_cast<char*>(mappedCoord.get_address()) + mappedCoord.get_size();
+		auto raw_ptr = reinterpret_cast<RawMemory>(mappedCoord.get_address()) + mappedCoord.get_size();
 		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
 	}
 
@@ -61,7 +62,6 @@ namespace algorithms {
 			}
 			return range.first;
 		}
-
 
 }
 

@@ -3,6 +3,8 @@
 #include <boost/interprocess/mapped_region.hpp>
 #include <iterator>
 
+using RawMemory = char*;
+
 template<typename NodeType, size_t NodeSize>
 class IndexIterator {
 public:
@@ -14,7 +16,7 @@ public:
 
 	IndexIterator();
 	IndexIterator(void* ptr);
-	IndexIterator(NodeType* ptr);
+	IndexIterator(RawMemory ptr);
 	~IndexIterator() = default;
 
 	IndexIterator& operator++();
@@ -48,7 +50,7 @@ public:
 	}
 	
 private:
-	NodeType* ptr;
+	RawMemory ptr;
 };
 
 
@@ -56,14 +58,14 @@ template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize>::IndexIterator() : ptr(nullptr) { }
 
 template<typename NodeType, size_t NodeSize>
-IndexIterator<NodeType, NodeSize>::IndexIterator(void* ptr) : ptr(reinterpret_cast<NodeType*>(ptr)) { }
+IndexIterator<NodeType, NodeSize>::IndexIterator(void* ptr) : ptr(reinterpret_cast<RawMemory>(ptr)) { }
 
 template<typename NodeType, size_t NodeSize>
-IndexIterator<NodeType, NodeSize>::IndexIterator(NodeType* ptr) : ptr(ptr) { }
+IndexIterator<NodeType, NodeSize>::IndexIterator(RawMemory ptr) : ptr(ptr) { }
 
 template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize>& IndexIterator<NodeType, NodeSize>::operator++() {
-	
+
 	this->ptr += NodeSize;
 	return *this;
 
@@ -122,12 +124,12 @@ const IndexIterator<NodeType, NodeSize>& IndexIterator<NodeType, NodeSize>
 
 template<typename NodeType, size_t NodeSize>
 NodeType& IndexIterator<NodeType, NodeSize>::operator*() const {
-	return *(this->ptr);
+	return *reinterpret_cast<NodeType*>(this->ptr);
 }
 
 template<typename NodeType, size_t NodeSize>
 NodeType& IndexIterator<NodeType, NodeSize>::operator->() const {
-	return *(this->ptr);
+	return *reinterpret_cast<NodeType*>(this->ptr);
 }
 
 template<typename NodeType, size_t NodeSize>
@@ -142,7 +144,7 @@ template<typename NodeType, size_t NodeSize>
 IndexIterator<NodeType, NodeSize> IndexIterator<NodeType, NodeSize>::operator-(size_t idx) const {
 
 	IndexIterator<NodeType, NodeSize> iterator(this->ptr);
-	return iterator+=idx;
+	return iterator-=idx;
 
 }
 
