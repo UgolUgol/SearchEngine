@@ -62,6 +62,10 @@ struct IndexTraits<DefaultIndex> {
 };
 
 
+struct SearchResultBlock {
+	std::wstring name;
+	std::wstring url;
+};
 
 template<typename IndexType = DefaultIndex>
 class Index {
@@ -158,15 +162,25 @@ private:
 namespace algorithms {
 
 		template<typename InputIterator> 
-		InputIterator findHash(InputIterator begin, InputIterator end, const typename InputIterator::value_type& hash) {
+		InputIterator findInIndex(InputIterator begin, InputIterator end, const typename InputIterator::value_type& value) {
 
-			auto range = std::equal_range(begin, end, hash);
+			auto range = std::equal_range(begin, end, value);
 			if(range.first == range.second) {
 				return end;
 			}
 
 			return range.first;
 		}
+/*
+		template<typename Container, typename IndexType>
+		std::vector<SearchResultBlock> formSearchResult(const Container& container, const DirectIndex<IndexType>& index) {
+
+			for(const auto& docId : container) {
+
+				auto find
+			}
+
+		} */
 
 }
 
