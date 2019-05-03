@@ -43,21 +43,31 @@ struct IndexTraits<DefaultIndex> {
 		struct DocId {
 			using Type = size_t;
 			static constexpr size_t offset = 1;
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
 		struct Offset {
 			using Type = size_t;
 			static constexpr size_t offset = 2;
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
 		struct NameLength {
 			using Type = size_t;
 			static constexpr size_t offset = 3;
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
 		struct UrlLength {
 			using Type = size_t;
 			static constexpr size_t offset = 4;
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
 
-		static constexpr size_t NodeSize = 4 * sizeof(size_t);
+		struct Raw {
+			using Type = char;
+			static constexpr size_t offset = 0;
+			static constexpr size_t NodeSize = sizeof(Type);
+		};
+
+		
 	};
 };
 
@@ -121,11 +131,13 @@ public:
 	using Offset = typename DirectIndexTraits::Offset;
 	using NameLength = typename DirectIndexTraits::NameLength;
 	using UrlLength = typename DirectIndexTraits::UrlLength;
+	using Raw = typename DirectIndexTraits::Raw;
 
-	using DocIdIterator = IndexIterator<typename DocId::Type, DirectIndexTraits::NodeSize>;
-	using OffsetIterator = IndexIterator<typename Offset::Type, DirectIndexTraits::NodeSize>;
-	using NameLengthIterator = IndexIterator<typename NameLength::Type, DirectIndexTraits::NodeSize>;
-	using UrlLengthIterator = IndexIterator<typename UrlLength::Type, DirectIndexTraits::NodeSize>;
+	using DocIdIterator = IndexIterator<typename DocId::Type, DocId::NodeSize>;
+	using OffsetIterator = IndexIterator<typename Offset::Type, Offset::NodeSize>;
+	using NameLengthIterator = IndexIterator<typename NameLength::Type, NameLength::NodeSize>;
+	using UrlLengthIterator = IndexIterator<typename UrlLength::Type, UrlLength::NodeSize>;
+	using RawIterator = IndexIterator<typename Raw::Type, Raw::NodeSize>;
 
 	DirectIndex() = delete;
 	DirectIndex(const DirectIndex&) = delete;
@@ -139,7 +151,7 @@ public:
 	auto begin() {
 
 		auto begin = static_cast<size_t*>(mappedInvCoord.get_address()) + IteratorType::offset;
-		return IndexIterator<typename IteratorType::Type, DirectIndexTraits::NodeSize>(static_cast<void*>(begin));
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
 
 	}
 
@@ -149,7 +161,7 @@ public:
 		auto endPosition = *static_cast<size_t*>(mappedInvCoord.get_address()) + sizeof(size_t)*IteratorType::offset;
 		auto end = static_cast<RawMemory>(mappedInvCoord.get_address()) + endPosition;
 
-		return IndexIterator<typename IteratorType::Type, DirectIndexTraits::NodeSize>(static_cast<void*>(end));
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(end));
 
 	}
 
@@ -171,16 +183,35 @@ namespace algorithms {
 
 			return range.first;
 		}
-/*
+
 		template<typename Container, typename IndexType>
-		std::vector<SearchResultBlock> formSearchResult(const Container& container, const DirectIndex<IndexType>& index) {
+		std::vector<SearchResultBlock> formSearchResult(const Container& docIds, DirectIndex<IndexType>& index) {
 
-			for(const auto& docId : container) {
+			using DIndex = DirectIndex<IndexType>;
+			std::vector<SearchResultBlock> results;
+			results.reserve(docIds.size());
 
-				auto find
+			for(const auto& docId : docIds) {
+
+				auto iterator = findInIndex(index.template begin<typename DIndex::DocId>(),
+				 							index.template end<typename DIndex::DocId>(), docId);
+				auto position = std::distance(index.template begin<typename DIndex::DocId>(), iterator);
+
+				auto offset = *(index.template begin<typename DIndex::Offset>() + position);
+				auto nameLength = *(index.template begin<typename DIndex::NameLength>() + position);
+				auto urlLength = *(index.template begin<typename DIndex::UrlLength>() + position);
+
+				auto articleInfoBegin = index.template begin<typename DIndex::Raw>() + offset;
+				auto rawArticleInfoBegin = reinterpret_cast<wchar_t*>(articleInfoBegin.rawPointer());
+
+				std::wstring name(rawArticleInfoBegin, rawArticleInfoBegin + nameLength);
+				std::wstring url(rawArticleInfoBegin + nameLength, rawArticleInfoBegin + nameLength + urlLength);
+
+				results.push_back(SearchResultBlock{name, url});
 			}
 
-		} */
+			return results;
+		} 
 
 }
 
