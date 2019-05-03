@@ -32,4 +32,11 @@ Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterat
 
 }
 
+
+template<typename IndexType>
+DirectIndex<IndexType>::DirectIndex(const char* invCoordFile) :
+									invCoord(invCoordFile, boost::interprocess::read_write),
+									mappedInvCoord(invCoord, boost::interprocess::read_write) { }
+
 template class Index<DefaultIndex>;
+template class DirectIndex<DefaultIndex>;
