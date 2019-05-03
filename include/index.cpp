@@ -18,7 +18,7 @@ Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterat
 	auto offset = IndexTraits<IndexType>::Dictionary::CoordOffset::Offset;
 	auto blockSize = IndexTraits<IndexType>::CoordinateFile::NodeSize;
 
-	return (*reinterpret_cast<Index<IndexType>::DictionaryOffsetNodeType*>(iterator.rawPointer() + offset)) / blockSize;
+	return (*reinterpret_cast<DictionaryOffsetNodeType*>(iterator.rawPointer() + offset)) / blockSize;
 
 }
 
@@ -28,7 +28,7 @@ typename Index<IndexType>::DictionaryLengthNodeType
 Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) {
 
 	auto offset = IndexTraits<IndexType>::Dictionary::Length::Offset;
-	return *reinterpret_cast<Index<IndexType>::DictionaryLengthNodeType*>(iterator.rawPointer() + offset);
+	return *reinterpret_cast<DictionaryLengthNodeType*>(iterator.rawPointer() + offset);
 
 }
 
