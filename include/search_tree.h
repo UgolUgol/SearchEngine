@@ -28,7 +28,6 @@ template<typename T>
 auto SearchTree::makeInverseExpression(T&& expression) {
 
 	using ClearType = std::decay_t<T>;
-
 	std::stack<typename ExpressionTraits<ClearType>::OperatorType> operators;
 	std::vector<typename ExpressionTraits<ClearType>::OperandType> operands;
 
@@ -88,7 +87,26 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 
 	}
 
-
-	return operands;
+	return convertToInternalView(operands);
 }
 
+template<typename T>
+auto SearchTree::convertToInternalView(const std::vector<T>& expression) {
+
+	std::stack<ExpressionPart> resultExpression;
+	for(const auto& token : expression) {
+
+		if(functions::isOperand(token)) {
+
+			auto hash = std::hash<T>{}(token);
+			resultExpression.push(std::make_pair(details::OperatorType::_operand, hash));
+		
+		} else {
+
+			resultExpression.push(std::make_pair(functions::getType(token), 0));
+
+		}
+	}
+	return resultExpression;
+
+}
