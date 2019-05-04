@@ -3,7 +3,8 @@
 #include <string>
 #include <stack>
 #include <map>
-#include <traits_engine.h>
+#include "traits_engine.h"
+#include "expression_node.h"
 
 class SearchTree {
 public:
@@ -12,7 +13,9 @@ public:
 
 	template<typename T> void build(T&& expression);
 private:
+	std::unique_ptr<ExpressionNode> root;
 	template<typename T> auto makeInverseExpression(T&& expression);
+	template<typename T> auto convertToInternalView(const std::vector<T>& expression);
 };
 
 
