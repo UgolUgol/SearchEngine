@@ -48,7 +48,7 @@ namespace Traits {
 
 namespace details 
 {
-	enum class OperatorType : size_t { _not, _and, _or, _leftBracket, _rightBracket };
+	enum class OperatorType : size_t { _not, _and, _or, _leftBracket, _rightBracket, _operand};
 	template<typename T> using OperatorsMap = std::map<std::basic_string<T>, std::pair<size_t, OperatorType>>;
 
 	template<typename T>
