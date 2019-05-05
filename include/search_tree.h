@@ -10,6 +10,8 @@ public:
 	~SearchTree() = default;
 
 	template<typename T> void build(T&& expression);
+	std::set<size_t> extractResults();
+
 private:
 	Index<DefaultIndex> index;
 	std::unique_ptr<ExpressionNode> root;
@@ -28,6 +30,21 @@ void SearchTree::build(T&& expression) {
 
 	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
 	root = makeTreeFromExpression(inverseExpression);
+
+}
+
+std::set<size_t> SearchTree::extractResults() {
+	
+	auto currentDocId = root->next();
+	std::set<size_t> docIds;
+	
+	while(currentDocId != boost::none) {
+
+		docIds.insert(**currentDocId);
+		currentDocId = root->next();
+
+	}
+	return docIds;
 }
 
 std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<ExpressionPart>& expression) {
