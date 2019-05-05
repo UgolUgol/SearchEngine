@@ -44,7 +44,19 @@ private:
 
 boost::optional<Iterator> OperatorAnd::next() {
 
-	return {};
+	auto leftDocId = left->next();
+	auto rightDocId = right->next();
+
+	while(leftDocId && rightDocId && (**leftDocId) != (**rightDocId)) {
+		
+		if(**leftDocId < **rightDocId) {
+			leftDocId = left->next();
+		} else {
+			rightDocId = right->next();
+		}
+	}
+
+	return leftDocId;
 }
 
 boost::optional<Iterator> OperatorOr::next() {
