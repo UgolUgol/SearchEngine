@@ -1,3 +1,5 @@
+#pragma once
+
 #include <vector>
 #include <iostream>
 #include <string>
@@ -5,41 +7,32 @@
 
 namespace Search {
 
-	struct Response {
-		std::wstring articleName;
-		std::wstring url;
-	};
-
-
 	class RequestHandler {
 	public:
-		template<typename T> std::vector<Response> search(T&& request);  
-
+		RequestHandler();
+		~RequestHandler() = default;
+		template<typename T> std::vector<SearchResultBlock> search(T&& request);  
 	private:
-		std::vector<Response> extractFromTree();
-
-		SearchTree tree;
+		DirectIndex<DefaultIndex> index;
 	};
 
 
+	RequestHandler::RequestHandler() : index("../index/files/invCoord.bin") { }
 
 	template<typename T>
-	std::vector<Response> RequestHandler::search(T&& request) {
+	std::vector<SearchResultBlock> RequestHandler::search(T&& request) {
 
 		using ClearType = std::decay_t<T>;
+		SearchTree tree;
 		if constexpr(Traits::is_string_v<ClearType>) {
 
 			tree.build(std::forward<T>(request));
 
 		} 
 
-		return extractFromTree();
+		auto docIds = tree.extractResults();
+		return algorithms::formSearchResult(docIds, index);
 	}
 
-
-	std::vector<Response> RequestHandler::extractFromTree() {
-		
-		return {};
-	}
 
 };
