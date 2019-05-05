@@ -6,23 +6,55 @@
 
 class SearchTree {
 public:
-	SearchTree() = default;
+	SearchTree();
 	~SearchTree() = default;
 
 	template<typename T> void build(T&& expression);
 private:
+	Index<DefaultIndex> index;
 	std::unique_ptr<ExpressionNode> root;
+
 	template<typename T> auto makeInverseExpression(T&& expression);
 	template<typename T> auto convertToInternalView(const std::vector<T>& expression);
+	std::unique_ptr<ExpressionNode> makeTreeFromExpression(std::stack<ExpressionPart>& expression);
 };
 
+SearchTree::SearchTree() : index("../index/files/dict.bin", "../index/files/coord.bin") {
 
+}
 
 template<typename T>
 void SearchTree::build(T&& expression) {
 
 	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
-	root->initialize(inverseExpression);
+	//root = makeTreeFromExpression(expression);
+}
+
+std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<ExpressionPart>& expression) {
+
+	std::unique_ptr<ExpressionNode> node;
+	auto nodeType = expression.top().first;
+	auto hash = expression.top().second;
+	expression.pop();
+
+	if(nodeType == details::OperatorType::_and) {
+
+		node = std::make_unique<OperatorAnd>();
+		node->left = makeTreeFromExpression(expression);
+		node->right = makeTreeFromExpression(expression);
+
+	} else if(nodeType == details::OperatorType::_or) {
+
+		node = std::make_unique<OperatorOr>();
+		node->left = makeTreeFromExpression(expression);
+		node->right = makeTreeFromExpression(expression);
+
+	} else if(nodeType == details::OperatorType::_operand) {
+
+		node = std::make_unique<Leaf>(hash);
+	}
+
+	return node;
 }
 
 template<typename T>

@@ -16,11 +16,10 @@ class ExpressionNode {
 public:
 	void initialize(std::stack<ExpressionPart>& expression);
 	virtual Iterator next() = 0;
-protected:
+	
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 };
-
 
 class OperatorAnd : public ExpressionNode {
 public:
@@ -34,6 +33,7 @@ public:
 
 class Leaf : public ExpressionNode {
 public:
+	Leaf(size_t hash);
 	Iterator next() override;
 private:
 	size_t offset;
@@ -41,23 +41,17 @@ private:
 	Iterator docId;
 };
 
-void ExpressionNode::initialize(std::stack<ExpressionPart>& expression) {
-
-	auto operationType = expression.top().first;
-	if(operationType == details::OperatorType::_and)  {
-		std::cout<<"her"<<std::endl;
-	}
-
-}
-
 Iterator OperatorAnd::next() {
 
 	return {};
 }
 
-
 Iterator OperatorOr::next() {
 	return {};
+}
+
+Leaf::Leaf(size_t hash) {
+
 }
 
 Iterator Leaf::next() {
