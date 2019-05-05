@@ -104,19 +104,22 @@ OperatorNot::OperatorNot() : currentDocId(0), excludedDocId(0) { }
 
 boost::optional<DocId> OperatorNot::next() {
 
-	if(currentDocId == excludedDocId) {
+	while(currentDocId == excludedDocId) {
 
 		auto docId = left->next();
-		if(docId) {
+		
+		if(docId && excludedDocId != *docId) {
 
 			currentDocId = excludedDocId + 1;
-			excludedDocId == *docId;
+			excludedDocId = *docId;
+			
 
-		} else {
-
+		} else if(!docId) {
+			
 			return boost::none;
 
-		}		
+		}
+
 	}
 	return currentDocId++;
 
