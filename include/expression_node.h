@@ -60,7 +60,18 @@ boost::optional<Iterator> OperatorAnd::next() {
 }
 
 boost::optional<Iterator> OperatorOr::next() {
-	return {};
+	
+	auto leftDocId = left->next();
+	if(leftDocId != boost::none) {
+		return leftDocId;
+	}
+
+	auto rightDocId = right->next();
+	if(rightDocId != boost::none) {
+		return rightDocId;
+	}
+
+	return boost::none;
 }
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) {
