@@ -69,6 +69,9 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 	} else if(nodeType == details::OperatorType::_operand) {
 
 		node = std::make_unique<Leaf>(hash, index);
+		node->left = nullptr;
+		node->right = nullptr;
+
 	}
 
 	return node;
