@@ -61,7 +61,6 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) {
 		current = 0;
 		docId = index.coordBegin() + offset;
 
-
 	} else {
 
 		offset = length = current = 0;
@@ -77,6 +76,6 @@ boost::optional<Iterator> Leaf::next() {
 	}
 
 	++current;
-	return ++(*docId);
+	return (*docId)++;
 }
 
