@@ -2,6 +2,7 @@
 #include <set>
 #include <stack>
 #include <memory>
+#include <boost/optional.hpp>
 #include "traits_engine.h"
 #include "index.h"
 
@@ -14,47 +15,59 @@ using ExpressionPart = std::pair<details::OperatorType, size_t>;
 
 class ExpressionNode {
 public:
-	void initialize(std::stack<ExpressionPart>& expression);
-	virtual Iterator next() = 0;
-	
+	virtual boost::optional<Iterator> next() = 0;
+
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 };
 
 class OperatorAnd : public ExpressionNode {
 public:
-	Iterator next() override;
+	boost::optional<Iterator> next() override;
 };
 
 class OperatorOr : public ExpressionNode {
 public:
-	Iterator next() override;
+	boost::optional<Iterator> next() override;
 };
 
 class Leaf : public ExpressionNode {
 public:
-	Leaf(size_t hash);
-	Iterator next() override;
+	Leaf(size_t hash, const Index<DefaultIndex>& index);
+	boost::optional<Iterator> next() override;
 private:
 	size_t offset;
 	size_t length;
-	Iterator docId;
+	boost::optional<Iterator> docId;
 };
 
-Iterator OperatorAnd::next() {
+boost::optional<Iterator> OperatorAnd::next() {
 
 	return {};
 }
 
-Iterator OperatorOr::next() {
+boost::optional<Iterator> OperatorOr::next() {
 	return {};
 }
 
-Leaf::Leaf(size_t hash) {
+Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) {
 
+	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
+	if(hashBlock != index.dictionaryEnd()) {
+
+		offset = index.getOffset(hashBlock);
+		length = index.getLength(hashBlock);
+		docId = index.coordBegin() + offset;
+
+	} else {
+
+		offset = length = 0;
+		docId = boost::none;
+
+	}
 }
 
-Iterator Leaf::next() {
+boost::optional<Iterator> Leaf::next() {
 	return {};
 }
 
