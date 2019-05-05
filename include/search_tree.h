@@ -2,8 +2,6 @@
 #include <vector>
 #include <string>
 #include <stack>
-#include <map>
-#include "traits_engine.h"
 #include "expression_node.h"
 
 class SearchTree {
@@ -24,7 +22,7 @@ template<typename T>
 void SearchTree::build(T&& expression) {
 
 	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
-
+	root->initialize(inverseExpression);
 }
 
 template<typename T>

@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <cstring>
+#include <map>
 namespace Traits {
 
 
