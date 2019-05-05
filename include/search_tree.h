@@ -27,7 +27,7 @@ template<typename T>
 void SearchTree::build(T&& expression) {
 
 	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
-	//root = makeTreeFromExpression(expression);
+	root = makeTreeFromExpression(inverseExpression);
 }
 
 std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<ExpressionPart>& expression) {
@@ -51,7 +51,7 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 	} else if(nodeType == details::OperatorType::_operand) {
 
-		node = std::make_unique<Leaf>(hash);
+		node = std::make_unique<Leaf>(hash, index);
 	}
 
 	return node;
