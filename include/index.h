@@ -98,24 +98,24 @@ public:
 	Index& operator=(const Index&) = delete;
 	Index& operator=(Index&&) = default;
 
-	auto dictionaryBegin() {
+	auto dictionaryBegin() const {
 		return DictionaryIterator(mappedDict.get_address());
 	}
-	auto dictionaryEnd() {
+	auto dictionaryEnd() const {
 		auto raw_ptr = reinterpret_cast<RawMemory>(mappedDict.get_address()) + mappedDict.get_size();
 		return DictionaryIterator(static_cast<void*>(raw_ptr));
 	}
 
-	auto coordBegin() {
+	auto coordBegin() const {
 		return CoordinateBlocksIterator(mappedCoord.get_address());
 	}
-	auto coordEnd() {
+	auto coordEnd() const {
 		auto raw_ptr = reinterpret_cast<RawMemory>(mappedCoord.get_address()) + mappedCoord.get_size();
 		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
 	}
 
-	DictionaryOffsetNodeType getOffset(DictionaryIterator iterator);
-	DictionaryLengthNodeType getLength(DictionaryIterator iterator);
+	DictionaryOffsetNodeType getOffset(DictionaryIterator iterator) const;
+	DictionaryLengthNodeType getLength(DictionaryIterator iterator) const;
 
 private:
 	boost::interprocess::file_mapping dict, coord;

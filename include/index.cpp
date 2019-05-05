@@ -13,7 +13,7 @@ Index<IndexType>::Index(const char* dictFile,
 
 template<typename IndexType> 
 typename Index<IndexType>::DictionaryOffsetNodeType 
-Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterator) {
+Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterator) const {
 
 	auto offset = IndexTraits<IndexType>::Dictionary::CoordOffset::Offset;
 	auto blockSize = IndexTraits<IndexType>::CoordinateFile::NodeSize;
@@ -25,7 +25,7 @@ Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterat
 
 template<typename IndexType> 
 typename Index<IndexType>::DictionaryLengthNodeType 
-Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) {
+Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) const {
 
 	auto offset = IndexTraits<IndexType>::Dictionary::Length::Offset;
 	return *reinterpret_cast<DictionaryLengthNodeType*>(iterator.rawPointer() + offset);
