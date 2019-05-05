@@ -38,6 +38,7 @@ public:
 private:
 	size_t offset;
 	size_t length;
+	size_t current;
 	boost::optional<Iterator> docId;
 };
 
@@ -57,17 +58,25 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) {
 
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);
+		current = 0;
 		docId = index.coordBegin() + offset;
+
 
 	} else {
 
-		offset = length = 0;
+		offset = length = current = 0;
 		docId = boost::none;
 
 	}
 }
 
 boost::optional<Iterator> Leaf::next() {
-	return {};
+	
+	if(current == length) {
+		return boost::none;
+	}
+
+	++current;
+	return ++(*docId);
 }
 
