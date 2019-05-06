@@ -3,7 +3,6 @@
 #include <stack>
 #include <memory>
 #include <boost/optional.hpp>
-#include "traits_engine.h"
 #include "index.h"
 
 namespace details {
@@ -12,7 +11,7 @@ namespace details {
 
 using Iterator = Index<DefaultIndex>::CoordinateBlocksIterator;
 using DocId = Iterator::value_type;
-using ExpressionPart = std::pair<details::OperatorType, size_t>;
+
 
 class ExpressionNode {
 public:

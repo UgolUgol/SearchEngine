@@ -3,6 +3,9 @@
 #include <string>
 #include <stack>
 #include "expression_node.h"
+#include "traits_engine.h"
+
+using ExpressionPart = std::pair<details::OperatorType, size_t>;
 
 class SearchTree {
 public:
@@ -70,7 +73,7 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 		node = std::make_unique<OperatorNot>();
 		node->left = makeTreeFromExpression(expression);
-		
+
 	} else if(nodeType == details::OperatorType::_operand) {
 
 		node = std::make_unique<Leaf>(hash, index);
