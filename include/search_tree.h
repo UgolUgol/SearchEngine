@@ -147,7 +147,7 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 		operators.pop();
 
 	}
-
+	
 	return convertToInternalView(operands);
 }
 

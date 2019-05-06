@@ -17,11 +17,12 @@ class ExpressionNode {
 public:
 	ExpressionNode();
 	virtual boost::optional<DocId> next() = 0;
+	virtual boost::optional<DocId> current();
 
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 protected:
-	bool isOver;
+	boost::optional<DocId> currentDocId;
 };
 
 class OperatorAnd : public ExpressionNode {
@@ -42,7 +43,6 @@ public:
 	boost::optional<DocId> next() override;
 
 private:
-	size_t currentDocId;
 	size_t excludedDocId;
 };
 
@@ -50,18 +50,19 @@ class Leaf : public ExpressionNode {
 public:
 	Leaf(size_t hash, const Index<DefaultIndex>& index);
 	boost::optional<DocId> next() override;
+	boost::optional<DocId> current() override;
 
 private:
 	size_t offset;
 	size_t length;
-	size_t current;
+	size_t position;
 	boost::optional<Iterator> docId;
 };
 
-ExpressionNode::ExpressionNode() : isOver(false) { }
+ExpressionNode::ExpressionNode() : currentDocId(0) { }
 OperatorAnd::OperatorAnd() : ExpressionNode() { }
 OperatorOr::OperatorOr() : ExpressionNode() { }
-OperatorNot::OperatorNot() : currentDocId(0), excludedDocId(0), ExpressionNode() { }
+OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
@@ -70,20 +71,29 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);
-		current = 0;
+		position = 0;
 		docId = index.coordBegin() + offset;
 
 	} else {
 
-		offset = length = current = 0;
+		offset = length = position = 0;
 		docId = boost::none;
 
 	}
 }
 
+boost::optional<DocId> ExpressionNode::current() {
+
+	if(currentDocId == 0) {
+		currentDocId == next();
+	}
+
+	return currentDocId;
+}
+
 boost::optional<DocId> OperatorAnd::next() {
 
-	if(isOver) {
+	if(currentDocId == boost::none) {
 		return boost::none;
 	}
 
@@ -104,76 +114,108 @@ boost::optional<DocId> OperatorAnd::next() {
 	}
 
 	if(!leftDocId || !rightDocId) {
-
-		isOver = true;
-		return boost::none;
-	
+		currentDocId = boost::none;
+	} else {
+		currentDocId = leftDocId;
 	}
 
-	return leftDocId;
+	return currentDocId;
 }
+
 
 boost::optional<DocId> OperatorOr::next() {
 	
-	if(isOver) {
+	if(currentDocId == boost::none) {
 		return boost::none;
 	}
 
-	auto leftDocId = left->next();
-	if(leftDocId != boost::none) {
+	auto leftDocId = left->current();
+	auto rightDocId = right->current();
 
-		return leftDocId;
+	if(leftDocId && rightDocId) {
+
+		if(*leftDocId < *rightDocId) {
+
+				left->next();
+				currentDocId = leftDocId;
+
+		} else if(*leftDocId > *rightDocId) {
+
+				right->next();
+				currentDocId = rightDocId;
+
+		} else {
+			
+			left->next();
+			right->next();
+			currentDocId = leftDocId;
+
+		}
+
+	} else if(!leftDocId) {
+
+		currentDocId = rightDocId;
+		right->next();
+
+	} else if(!rightDocId) {
+
+		currentDocId = leftDocId;
+		left->next();
 
 	}
 
-	auto rightDocId = right->next();
-	if(rightDocId != boost::none) {
-
-		return rightDocId;
-
-	}
-
-	isOver = true;
-	return boost::none;
+	return currentDocId;
 }
 
 boost::optional<DocId> OperatorNot::next() {
 
-	if(isOver) {
+	if(currentDocId == boost::none) {
 		return boost::none;
 	}
 
-	while(currentDocId == excludedDocId) {
+	++(*currentDocId);
+	while(currentDocId >= excludedDocId) {
 
 		auto docId = left->next();
-		
 		if(docId && excludedDocId != *docId) {
 
 			currentDocId = excludedDocId + 1;
 			excludedDocId = *docId;
 			
-
 		} else if(!docId) {
 			
-			isOver = true;
-			return boost::none;
+			currentDocId = boost::none;
+			break;
 
 		}
 
 	}
-	return currentDocId++;
 
+	return currentDocId;
+}
+
+
+boost::optional<DocId> Leaf::current() {
+
+	if(currentDocId == boost::none) {
+
+		return currentDocId;
+	
+	}
+
+	return **docId;
 }
 
 boost::optional<DocId> Leaf::next() {
 	
-	if(current == length) {
+	if(position == length) {
 
-		return boost::none;
+		currentDocId = boost::none;
+		return currentDocId;
 
 	}
 
-	++current;
-	return *((*docId)++);
+	++position;
+	return *((*docId)++);;
 }
 
