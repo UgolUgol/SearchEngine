@@ -16,8 +16,9 @@ using DocId = Iterator::value_type;
 class ExpressionNode {
 public:
 	ExpressionNode();
-	virtual boost::optional<DocId> next() = 0;
+
 	virtual boost::optional<DocId> current();
+	virtual boost::optional<DocId> next() = 0;
 
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
@@ -49,8 +50,9 @@ private:
 class Leaf : public ExpressionNode {
 public:
 	Leaf(size_t hash, const Index<DefaultIndex>& index);
-	boost::optional<DocId> next() override;
+
 	boost::optional<DocId> current() override;
+	boost::optional<DocId> next() override;
 
 private:
 	size_t offset;
@@ -60,9 +62,13 @@ private:
 };
 
 ExpressionNode::ExpressionNode() : currentDocId(0) { }
+
 OperatorAnd::OperatorAnd() : ExpressionNode() { }
+
 OperatorOr::OperatorOr() : ExpressionNode() { }
+
 OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
+
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
@@ -84,7 +90,7 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 boost::optional<DocId> ExpressionNode::current() {
 
 	if(currentDocId && *currentDocId == 0) {
-		currentDocId == next();
+		currentDocId = next();
 	}
 
 	return currentDocId;
@@ -132,7 +138,7 @@ boost::optional<DocId> OperatorOr::next() {
 	auto rightDocId = right->current();
 
 	if(leftDocId && rightDocId) {
-
+		
 		if(*leftDocId < *rightDocId) {
 
 				left->next();
@@ -152,12 +158,12 @@ boost::optional<DocId> OperatorOr::next() {
 		}
 
 	} else if(!leftDocId) {
-
+		
 		currentDocId = rightDocId;
 		right->next();
 
 	} else if(!rightDocId) {
-
+		
 		currentDocId = leftDocId;
 		left->next();
 
@@ -186,7 +192,6 @@ boost::optional<DocId> OperatorNot::next() {
 			break;
 
 		}
-
 	}
 
 	return currentDocId;
@@ -195,13 +200,15 @@ boost::optional<DocId> OperatorNot::next() {
 
 boost::optional<DocId> Leaf::current() {
 
-	if(currentDocId == boost::none) {
+	if(currentDocId && *currentDocId == 0) {
+		
+		currentDocId = **docId;
+		++position;
+		++(*docId);
 
-		return currentDocId;
-	
 	}
 
-	return **docId;
+	return currentDocId;
 }
 
 boost::optional<DocId> Leaf::next() {
@@ -213,7 +220,9 @@ boost::optional<DocId> Leaf::next() {
 
 	}
 
+	currentDocId = **docId;
 	++position;
-	return *((*docId)++);;
+	++(*docId);
+	return currentDocId;
 }
 
