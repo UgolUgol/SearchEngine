@@ -15,19 +15,24 @@ using DocId = Iterator::value_type;
 
 class ExpressionNode {
 public:
+	ExpressionNode();
 	virtual boost::optional<DocId> next() = 0;
 
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
+protected:
+	bool isOver;
 };
 
 class OperatorAnd : public ExpressionNode {
 public:
+	OperatorAnd();
 	boost::optional<DocId> next() override;
 };
 
 class OperatorOr : public ExpressionNode {
 public:
+	OperatorOr();
 	boost::optional<DocId> next() override;
 };
 
@@ -53,7 +58,34 @@ private:
 	boost::optional<Iterator> docId;
 };
 
+ExpressionNode::ExpressionNode() : isOver(false) { }
+OperatorAnd::OperatorAnd() : ExpressionNode() { }
+OperatorOr::OperatorOr() : ExpressionNode() { }
+OperatorNot::OperatorNot() : currentDocId(0), excludedDocId(0), ExpressionNode() { }
+
+Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
+
+	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
+	if(hashBlock != index.dictionaryEnd()) {
+
+		offset = index.getOffset(hashBlock);
+		length = index.getLength(hashBlock);
+		current = 0;
+		docId = index.coordBegin() + offset;
+
+	} else {
+
+		offset = length = current = 0;
+		docId = boost::none;
+
+	}
+}
+
 boost::optional<DocId> OperatorAnd::next() {
+
+	if(isOver) {
+		return boost::none;
+	}
 
 	auto leftDocId = left->next();
 	auto rightDocId = right->next();
@@ -73,6 +105,7 @@ boost::optional<DocId> OperatorAnd::next() {
 
 	if(!leftDocId || !rightDocId) {
 
+		isOver = true;
 		return boost::none;
 	
 	}
@@ -82,6 +115,10 @@ boost::optional<DocId> OperatorAnd::next() {
 
 boost::optional<DocId> OperatorOr::next() {
 	
+	if(isOver) {
+		return boost::none;
+	}
+
 	auto leftDocId = left->next();
 	if(leftDocId != boost::none) {
 
@@ -96,12 +133,15 @@ boost::optional<DocId> OperatorOr::next() {
 
 	}
 
+	isOver = true;
 	return boost::none;
 }
 
-OperatorNot::OperatorNot() : currentDocId(0), excludedDocId(0) { }
-
 boost::optional<DocId> OperatorNot::next() {
+
+	if(isOver) {
+		return boost::none;
+	}
 
 	while(currentDocId == excludedDocId) {
 
@@ -115,6 +155,7 @@ boost::optional<DocId> OperatorNot::next() {
 
 		} else if(!docId) {
 			
+			isOver = true;
 			return boost::none;
 
 		}
@@ -122,24 +163,6 @@ boost::optional<DocId> OperatorNot::next() {
 	}
 	return currentDocId++;
 
-}
-
-Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) {
-
-	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
-	if(hashBlock != index.dictionaryEnd()) {
-
-		offset = index.getOffset(hashBlock);
-		length = index.getLength(hashBlock);
-		current = 0;
-		docId = index.coordBegin() + offset;
-
-	} else {
-
-		offset = length = current = 0;
-		docId = boost::none;
-
-	}
 }
 
 boost::optional<DocId> Leaf::next() {
