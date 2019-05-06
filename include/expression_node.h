@@ -63,7 +63,6 @@ ExpressionNode::ExpressionNode() : currentDocId(0) { }
 OperatorAnd::OperatorAnd() : ExpressionNode() { }
 OperatorOr::OperatorOr() : ExpressionNode() { }
 OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
-
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
@@ -84,7 +83,7 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 boost::optional<DocId> ExpressionNode::current() {
 
-	if(currentDocId == 0) {
+	if(currentDocId && *currentDocId == 0) {
 		currentDocId == next();
 	}
 
@@ -137,18 +136,18 @@ boost::optional<DocId> OperatorOr::next() {
 		if(*leftDocId < *rightDocId) {
 
 				left->next();
-				currentDocId = leftDocId;
+				currentDocId = *leftDocId;
 
 		} else if(*leftDocId > *rightDocId) {
 
 				right->next();
-				currentDocId = rightDocId;
+				currentDocId = *rightDocId;
 
 		} else {
 			
 			left->next();
 			right->next();
-			currentDocId = leftDocId;
+			currentDocId = *leftDocId;
 
 		}
 
@@ -163,7 +162,6 @@ boost::optional<DocId> OperatorOr::next() {
 		left->next();
 
 	}
-
 	return currentDocId;
 }
 
