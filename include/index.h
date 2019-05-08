@@ -104,13 +104,6 @@ struct SearchResultBlock {
 template<typename IndexType = DefaultIndex>
 class Index {
 public:
-
-/*	using DictionaryNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
-	using DictionaryOffsetNodeType = typename IndexTraits<IndexType>::Dictionary::CoordOffset::Type;
-	using DictionaryLengthNodeType = typename IndexTraits<IndexType>::Dictionary::Length::Type;
-	using CoordinateFilePositionNodeType = typename IndexTraits<IndexType>::CoordinateFile::Position::Type;
-	using DictionaryIterator = IndexIterator<DictionaryNodeType, IndexTraits<IndexType>::Dictionary::NodeSize>;*/
-
 	using DictionaryTraits = typename IndexTraits<IndexType>::DictionaryTest;
 	using Hash = typename DictionaryTraits::Hash;
 	using OffsetInfo = typename DictionaryTraits::OffsetInfo;

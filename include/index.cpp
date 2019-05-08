@@ -16,7 +16,9 @@ typename Index<IndexType>::OffsetInfo::Type
 Index<IndexType>::getOffset(typename Index<IndexType>::HashIterator iterator) const {
 
 	auto offset = std::distance(dictionaryBegin<Hash>(), iterator);
-	return *(dictionaryBegin<OffsetInfo>() + offset);
+	auto blockSize = IndexTraits<IndexType>::CoordinateFile::NodeSize;
+
+	return *(dictionaryBegin<OffsetInfo>() + offset) / blockSize;
 
 }
 
