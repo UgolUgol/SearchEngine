@@ -5,10 +5,6 @@
 #include <boost/optional.hpp>
 #include "index.h"
 
-namespace details {
-	enum class OperatorType : size_t;
-};
-
 using Iterator = Index<DefaultIndex>::CoordinateBlocksIterator;
 using DocId = Iterator::value_type;
 
