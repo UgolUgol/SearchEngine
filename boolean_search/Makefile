@@ -5,8 +5,12 @@ BOOST_INCLUDE=${BOOST_PATH}/include
 
 all: searcher
 
-searcher: index
-	g++ -std=c++17 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) $(TOOLS_INCLUDE)/object_files/index.o make_search.cpp
+searcher: index expression_node
+	g++ -std=c++17 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) $(TOOLS_INCLUDE)/object_files/index.o \
+	$(TOOLS_INCLUDE)/object_files/expression_node.o make_search.cpp -o searcher.out
+
+expression_node: $(TOOLS_INCLUDE)/expression_node.cpp
+	g++ -std=c++17 -I $(BOOST_INCLUDE) -c $(TOOLS_INCLUDE)/expression_node.cpp -o $(TOOLS_INCLUDE)/object_files/expression_node.o
 
 index: $(TOOLS_INCLUDE)/index.cpp
 	g++ -std=c++17 -I $(BOOST_INCLUDE) -c $(TOOLS_INCLUDE)/index.cpp -o $(TOOLS_INCLUDE)/object_files/index.o
