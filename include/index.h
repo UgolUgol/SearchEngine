@@ -148,7 +148,7 @@ public:
 	DirectIndex& operator=(DirectIndex&&) = default;
 
 	template<typename IteratorType>
-	auto begin() {
+	auto begin() const {
 
 		auto begin = static_cast<size_t*>(mappedInvCoord.get_address()) + IteratorType::offset;
 		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
@@ -156,7 +156,7 @@ public:
 	}
 
 	template<typename IteratorType>
-	auto end() {
+	auto end() const {
 
 		auto endPosition = *static_cast<size_t*>(mappedInvCoord.get_address()) + sizeof(size_t)*IteratorType::offset;
 		auto end = static_cast<RawMemory>(mappedInvCoord.get_address()) + endPosition;
@@ -185,7 +185,7 @@ namespace algorithms {
 		}
 
 		template<typename Container, typename IndexType>
-		std::vector<SearchResultBlock> formSearchResult(const Container& docIds, DirectIndex<IndexType>& index) {
+		std::vector<SearchResultBlock> formSearchResult(const Container& docIds, const DirectIndex<IndexType>& index) {
 
 			using DIndex = DirectIndex<IndexType>;
 			std::vector<SearchResultBlock> results;
