@@ -10,8 +10,10 @@ OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
-	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin(), index.dictionaryEnd(), hash);
-	if(hashBlock != index.dictionaryEnd()) {
+	using HashType = typename Index<DefaultIndex>::Hash;
+	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin<HashType>(), index.dictionaryEnd<HashType>(), hash);
+
+	if(hashBlock != index.dictionaryEnd<HashType>()) {
 
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);

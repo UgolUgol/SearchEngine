@@ -28,6 +28,30 @@ struct IndexTraits<DefaultIndex> {
 	};
 
 
+	struct DictionaryTest {
+
+		struct Hash {
+			using Type = size_t;
+			static constexpr size_t Offset = 0;
+			static constexpr size_t NodeSize = 3 * sizeof(size_t);
+		};
+
+		struct OffsetInfo {
+			using Type = size_t;
+			static constexpr size_t Offset = 1;
+			static constexpr size_t NodeSize = 3 * sizeof(size_t);
+		};
+
+		struct LengthInfo {
+			using Type = size_t;
+			static constexpr size_t Offset = 2;
+			static constexpr size_t NodeSize = 3 * sizeof(size_t);
+		};
+
+
+	};
+
+
 	struct CoordinateFile { 
 		using Type = size_t;
 		static constexpr size_t NodeSize = 2 * sizeof(size_t);
@@ -81,13 +105,22 @@ template<typename IndexType = DefaultIndex>
 class Index {
 public:
 
-	using DictionaryNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
-	using CoordinateFileNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
+/*	using DictionaryNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
 	using DictionaryOffsetNodeType = typename IndexTraits<IndexType>::Dictionary::CoordOffset::Type;
 	using DictionaryLengthNodeType = typename IndexTraits<IndexType>::Dictionary::Length::Type;
 	using CoordinateFilePositionNodeType = typename IndexTraits<IndexType>::CoordinateFile::Position::Type;
+	using DictionaryIterator = IndexIterator<DictionaryNodeType, IndexTraits<IndexType>::Dictionary::NodeSize>;*/
 
-	using DictionaryIterator = IndexIterator<DictionaryNodeType, IndexTraits<IndexType>::Dictionary::NodeSize>;
+	using DictionaryTraits = typename IndexTraits<IndexType>::DictionaryTest;
+	using Hash = typename DictionaryTraits::Hash;
+	using OffsetInfo = typename DictionaryTraits::OffsetInfo;
+	using LengthInfo = typename DictionaryTraits::LengthInfo;
+
+	using CoordinateFileNodeType = typename IndexTraits<IndexType>::Dictionary::Type;
+
+	using HashIterator = IndexIterator<typename Hash::Type, Hash::NodeSize>;
+	using OffsetIterator = IndexIterator<typename OffsetInfo::Type, OffsetInfo::NodeSize>;
+	using LengthIterator = IndexIterator<typename LengthInfo::Type, LengthInfo::NodeSize>;
 	using CoordinateBlocksIterator = IndexIterator<CoordinateFileNodeType, IndexTraits<IndexType>::CoordinateFile::NodeSize>;
 
 	Index() = delete;
@@ -98,12 +131,20 @@ public:
 	Index& operator=(const Index&) = delete;
 	Index& operator=(Index&&) = default;
 
-	auto dictionaryBegin() const {
-		return DictionaryIterator(mappedDict.get_address());
+	template<typename IteratorType> auto dictionaryBegin() const {
+
+		auto begin = static_cast<size_t*>(mappedDict.get_address()) + IteratorType::Offset;
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
+
 	}
-	auto dictionaryEnd() const {
-		auto raw_ptr = reinterpret_cast<RawMemory>(mappedDict.get_address()) + mappedDict.get_size();
-		return DictionaryIterator(static_cast<void*>(raw_ptr));
+
+	template<typename IteratorType> auto dictionaryEnd() const {
+
+		auto offset = sizeof(typename IteratorType::Type) * IteratorType::Offset;
+		auto end = reinterpret_cast<RawMemory>(mappedDict.get_address()) + offset + mappedDict.get_size();
+
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(end));
+	
 	}
 
 	auto coordBegin() const {
@@ -114,8 +155,8 @@ public:
 		return CoordinateBlocksIterator(static_cast<void*>(raw_ptr));
 	}
 
-	DictionaryOffsetNodeType getOffset(DictionaryIterator iterator) const;
-	DictionaryLengthNodeType getLength(DictionaryIterator iterator) const;
+	typename OffsetInfo::Type getOffset(HashIterator iterator) const;
+	typename LengthInfo::Type getLength(HashIterator iterator) const;
 
 private:
 	boost::interprocess::file_mapping dict, coord;

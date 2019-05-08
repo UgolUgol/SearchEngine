@@ -12,23 +12,21 @@ Index<IndexType>::Index(const char* dictFile,
 
 
 template<typename IndexType> 
-typename Index<IndexType>::DictionaryOffsetNodeType 
-Index<IndexType>::getOffset(typename Index<IndexType>::DictionaryIterator iterator) const {
+typename Index<IndexType>::OffsetInfo::Type 
+Index<IndexType>::getOffset(typename Index<IndexType>::HashIterator iterator) const {
 
-	auto offset = IndexTraits<IndexType>::Dictionary::CoordOffset::Offset;
-	auto blockSize = IndexTraits<IndexType>::CoordinateFile::NodeSize;
-
-	return (*reinterpret_cast<DictionaryOffsetNodeType*>(iterator.rawPointer() + offset)) / blockSize;
+	auto offset = std::distance(dictionaryBegin<Hash>(), iterator);
+	return *(dictionaryBegin<OffsetInfo>() + offset);
 
 }
 
 
 template<typename IndexType> 
-typename Index<IndexType>::DictionaryLengthNodeType 
-Index<IndexType>::getLength(typename Index<IndexType>::DictionaryIterator iterator) const {
+typename Index<IndexType>::LengthInfo::Type 
+Index<IndexType>::getLength(typename Index<IndexType>::HashIterator iterator) const {
 
-	auto offset = IndexTraits<IndexType>::Dictionary::Length::Offset;
-	return *reinterpret_cast<DictionaryLengthNodeType*>(iterator.rawPointer() + offset);
+	auto offset = std::distance(dictionaryBegin<Hash>(), iterator);
+	return *(dictionaryBegin<LengthInfo>() + offset);
 
 }
 
