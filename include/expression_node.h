@@ -5,7 +5,7 @@
 #include <boost/optional.hpp>
 #include "index.h"
 
-using Iterator = Index<DefaultIndex>::CoordinateBlocksIterator;
+using Iterator = Index<DefaultIndex>::DocIdIterator;
 using DocId = Iterator::value_type;
 
 

@@ -11,14 +11,15 @@ OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 	using HashType = typename Index<DefaultIndex>::Hash;
-	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin<HashType>(), index.dictionaryEnd<HashType>(), hash);
+	using DocIdType = typename Index<DefaultIndex>::DocId;
 
+	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin<HashType>(), index.dictionaryEnd<HashType>(), hash);
 	if(hashBlock != index.dictionaryEnd<HashType>()) {
 
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);
 		position = 0;
-		docId = index.coordBegin() + offset;
+		docId = index.coordBegin<DocIdType>() + offset;
 
 	} else {
 
