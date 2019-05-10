@@ -11,7 +11,6 @@ int main() {
 
 	std::wstring s;
 	std::getline(std::wcin, s);
-
 	auto result = req.search(t.transform(s));	
 	for(const auto& block : result) {
 		std::wcout<<block.name<<std::endl<<block.url<<std::endl<<std::endl;
