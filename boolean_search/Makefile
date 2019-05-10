@@ -6,7 +6,7 @@ BOOST_INCLUDE=${BOOST_PATH}/include
 all: searcher
 
 searcher: index expression_node
-	g++ -std=c++17 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) $(TOOLS_INCLUDE)/object_files/index.o \
+	g++ -std=c++17 -O2 -I $(TOOLS_INCLUDE) -I $(BOOST_INCLUDE) $(TOOLS_INCLUDE)/object_files/index.o \
 	$(TOOLS_INCLUDE)/object_files/expression_node.o make_search.cpp -o searcher.out
 
 expression_node: $(TOOLS_INCLUDE)/expression_node.cpp

@@ -61,7 +61,7 @@ namespace details
 
 		static const OperatorsMap<char> operators;
 		static const OperatorsMap<char> brackets;
-		static constexpr const char delimiter = ' ';
+		static constexpr char delimiter = ' ';
 
 	};
 	const OperatorsMap<char> ConstantsTraits<char>::operators = 
