@@ -11,10 +11,13 @@ int main() {
 
 	std::wstring s;
 	std::getline(std::wcin, s);
-	auto result = req.search(t.transform(s));	
+
+	auto transformedExpression = t.transform(s);
+	auto result = req.search(transformedExpression);	
 	for(const auto& block : result) {
 		std::wcout<<block.name<<std::endl<<block.url<<std::endl<<std::endl;
 	}
+	std::wcout<<"Results for request: "<<transformedExpression<<std::endl;
 
 	return 0;
 }

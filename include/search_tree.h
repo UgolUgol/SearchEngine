@@ -120,7 +120,7 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 
 			operands.push_back(std::move(token));
 
-		} else {
+		} else if(functions::isBracket(token)) {
 			
 			if(functions::getType(token) == details::OperatorType::_leftBracket) {
 

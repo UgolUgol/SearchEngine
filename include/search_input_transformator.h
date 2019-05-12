@@ -93,22 +93,19 @@ std::basic_string<T> InputTransformator<std::basic_string<T>>
 	for(auto token = tokens.begin(); token != std::prev(tokens.end()); ++token) {
 
 		auto nextToken = std::next(token);
-		bool twoOperands = functions::isOperand(*token) &&
-		 				   functions::isOperand(*nextToken);
+		bool twoOperands = functions::isOperand(*token) && functions::isOperand(*nextToken);
 
-		bool operandAndNegative = functions::isOperand(*token) &&
-								  functions::isOperator(*nextToken) &&
+		bool operandAndNegative = functions::isOperand(*token) && functions::isOperator(*nextToken) &&
 								  (functions::getType(*nextToken) == details::OperatorType::_not);
 
-		bool operandAndBracket = functions::isOperand(*token) &&
+		bool operandAndBracket = functions::isOperand(*token) &&  functions::isBracket(*nextToken) &&
 								 (functions::getType(*nextToken) == details::OperatorType::_leftBracket);
 
+		bool bracketAndOperand = functions::isBracket(*token) && functions::isOperand(*nextToken) &&
+								 (functions::getType(*token) == details::OperatorType::_rightBracket);
 
-		bool bracketAndOperand = (functions::getType(*token) == details::OperatorType::_rightBracket) &&
-								 functions::isOperand(*nextToken);
 
-
-		if(twoOperands || operandAndNegative|| operandAndBracket || bracketAndOperand) {
+		if(twoOperands || operandAndNegative || operandAndBracket || bracketAndOperand) {
 
 			token = tokens.insert(std::next(token), _and);
 

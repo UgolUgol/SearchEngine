@@ -112,20 +112,30 @@ namespace functions {
 
 	}
 
+	template<typename T> 
+	bool isBracket(const std::basic_string<T>& token)
+	{
+
+		return details::ConstantsTraits<T>::brackets.find(token) != details::ConstantsTraits<T>::brackets.cend();
+
+	}
+
+
 	template<typename T>
 	bool isOperand(const std::basic_string<T>& token) 
 	{
 
-		return !isOperator(token) && 
-			   details::ConstantsTraits<T>::brackets.find(token) == details::ConstantsTraits<T>::brackets.cend();
+		return !isOperator(token) && !isBracket(token);
 
 	}
+
 
 	template<typename T> 
 	size_t getPriority(const std::basic_string<T>& token) 
 	{ 
 		return details::ConstantsTraits<T>::operators.find(token)->second.first;
 	}
+
 	template<typename T>
 	details::OperatorType getType(const std::basic_string<T>& token)
 	{	
