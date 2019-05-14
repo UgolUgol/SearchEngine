@@ -33,6 +33,7 @@ void SearchTree::build(T&& expression) {
 
 	auto inverseExpression = makeInverseExpression(std::forward<T>(expression));
 	root = makeTreeFromExpression(inverseExpression);
+	root->initializate();
 
 }
 

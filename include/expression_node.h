@@ -13,13 +13,18 @@ class ExpressionNode {
 public:
 	ExpressionNode();
 
+	void initializate();
 	virtual boost::optional<DocId> current();
 	virtual boost::optional<DocId> next() = 0;
 
+
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
+
 protected:
 	boost::optional<DocId> currentDocId;
+private:
+	virtual void concreteInitializate();
 };
 
 class OperatorAnd : public ExpressionNode {
@@ -40,16 +45,18 @@ public:
 	boost::optional<DocId> next() override;
 
 private:
-	size_t excludedDocId;
+	void concreteInitializate() override;
+
+	boost::optional<size_t> leftExcluded;
+	boost::optional<size_t> rightExcluded;
+	size_t maxDocId;
 };
 
 class Leaf : public ExpressionNode {
 public:
 	Leaf(size_t hash, const Index<DefaultIndex>& index);
 
-	boost::optional<DocId> current() override;
 	boost::optional<DocId> next() override;
-
 private:
 	size_t offset;
 	size_t length;

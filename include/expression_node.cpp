@@ -6,7 +6,7 @@ OperatorAnd::OperatorAnd() : ExpressionNode() { }
 
 OperatorOr::OperatorOr() : ExpressionNode() { }
 
-OperatorNot::OperatorNot() : excludedDocId(0), ExpressionNode() { }
+OperatorNot::OperatorNot() : maxDocId(14923), ExpressionNode() { }
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
@@ -20,6 +20,7 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 		length = index.getLength(hashBlock);
 		position = 0;
 		docId = index.coordBegin<DocIdType>() + offset;
+		currentDocId = **docId;
 
 	} else {
 
@@ -29,6 +30,20 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 	}
 }
 
+void ExpressionNode::initializate() {
+
+	if(left) {
+		left->initializate();
+	} 
+	if(right) {
+		right->initializate();
+	}
+
+	concreteInitializate();
+}
+
+void ExpressionNode::concreteInitializate() { }
+
 boost::optional<DocId> ExpressionNode::current() {
 
 	if(currentDocId && *currentDocId == 0) {
@@ -37,6 +52,7 @@ boost::optional<DocId> ExpressionNode::current() {
 
 	return currentDocId;
 }
+
 
 boost::optional<DocId> OperatorAnd::next() {
 
@@ -113,44 +129,59 @@ boost::optional<DocId> OperatorOr::next() {
 	return currentDocId;
 }
 
+
+void OperatorNot::concreteInitializate() {
+
+	leftExcluded = 0;
+	rightExcluded = left->current() ? left->current() : boost::make_optional(maxDocId);
+	currentDocId = 1;
+
+}
+
 boost::optional<DocId> OperatorNot::next() {
 
 	if(currentDocId == boost::none) {
 		return boost::none;
 	}
 
-	++(*currentDocId);
-	while(currentDocId >= excludedDocId) {
+	if(currentDocId > leftExcluded && currentDocId < rightExcluded) {
+		return (*currentDocId)++;
+	}
 
-		auto docId = left->next();
-		if(docId && excludedDocId != *docId) {
+	do {
 
-			currentDocId = excludedDocId + 1;
-			excludedDocId = *docId;
-			
-		} else if(!docId) {
-			
-			currentDocId = boost::none;
+		leftExcluded  = left->current();
+		rightExcluded = left->next();
+
+		if(!leftExcluded) {
+
+			leftExcluded = rightExcluded = maxDocId;
 			break;
 
 		}
-	}
 
-	return currentDocId;
-}
+		if(!rightExcluded) {
+
+			rightExcluded = maxDocId;
+			break;
+
+		}
+	
+	} while(*rightExcluded - *leftExcluded < 2);
 
 
-boost::optional<DocId> Leaf::current() {
-
-	if(currentDocId && *currentDocId == 0) {
+	if(*rightExcluded - *leftExcluded < 2) {
 		
-		currentDocId = **docId;
-		++position;
-		++(*docId);
+		currentDocId = boost::none;
+		return boost::none;
 
+	} else {
+
+		currentDocId = *leftExcluded + 1;
+	
 	}
 
-	return currentDocId;
+	return (*currentDocId)++;
 }
 
 boost::optional<DocId> Leaf::next() {
