@@ -42,6 +42,7 @@ public:
 class OperatorNot: public ExpressionNode {
 public:
 	OperatorNot();
+	boost::optional<DocId> current() override;
 	boost::optional<DocId> next() override;
 
 private:

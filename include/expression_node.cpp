@@ -138,6 +138,18 @@ void OperatorNot::concreteInitializate() {
 
 }
 
+
+boost::optional<DocId> OperatorNot::current() {
+
+	if(currentDocId <= leftExcluded || currentDocId >= rightExcluded) { 
+
+		currentDocId = next();
+
+	}
+	
+	return currentDocId;
+}
+
 boost::optional<DocId> OperatorNot::next() {
 
 	if(currentDocId == boost::none) {
