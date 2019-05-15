@@ -108,7 +108,7 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 			} else {
 
 				while(!operators.empty() &&
-				      functions::getPriority(token) <= functions::getPriority(operators.top())) {
+				      functions::getPriority(token) < functions::getPriority(operators.top())) {
 
 					operands.push_back(operators.top());
 					operators.pop();
