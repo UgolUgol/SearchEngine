@@ -39,15 +39,16 @@ void SearchTree::build(T&& expression) {
 
 std::set<size_t> SearchTree::extractResults() {
 	
-	auto currentDocId = root->next();
 	std::set<size_t> docIds;
-	
+	auto currentDocId = root->current();
+
 	while(currentDocId != boost::none) {
 		
 		docIds.insert(*currentDocId);
 		currentDocId = root->next();
 
 	}
+
 	return docIds;
 }
 
@@ -148,7 +149,7 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 		operators.pop();
 
 	}
-	
+
 	return convertToInternalView(operands);
 }
 

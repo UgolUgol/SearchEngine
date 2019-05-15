@@ -134,7 +134,7 @@ void OperatorNot::concreteInitializate() {
 
 	leftExcluded = 0;
 	rightExcluded = left->current() ? left->current() : boost::make_optional(maxDocId);
-	currentDocId = 1;
+	currentDocId = next();
 
 }
 
@@ -146,7 +146,7 @@ boost::optional<DocId> OperatorNot::current() {
 		currentDocId = next();
 
 	}
-	
+
 	return currentDocId;
 }
 
@@ -156,8 +156,9 @@ boost::optional<DocId> OperatorNot::next() {
 		return boost::none;
 	}
 
+	++(*currentDocId);
 	if(currentDocId > leftExcluded && currentDocId < rightExcluded) {
-		return (*currentDocId)++;
+		return *currentDocId;
 	}
 
 	do {
@@ -193,7 +194,7 @@ boost::optional<DocId> OperatorNot::next() {
 	
 	}
 
-	return (*currentDocId)++;
+	return *currentDocId;
 }
 
 boost::optional<DocId> Leaf::next() {
