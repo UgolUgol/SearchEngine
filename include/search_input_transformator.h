@@ -103,9 +103,16 @@ std::basic_string<T> InputTransformator<std::basic_string<T>>
 
 		bool bracketAndOperand = functions::isBracket(*token) && functions::isOperand(*nextToken) &&
 								 (functions::getType(*token) == details::OperatorType::_rightBracket);
+		
+		bool bracketAndNegative = functions::isBracket(*token) && functions::isOperator(*nextToken) &&
+								  (functions::getType(*token) == details::OperatorType::_rightBracket) && 
+								  (functions::getType(*nextToken) == details::OperatorType::_not);
 
+		bool twoBrackets = functions::isBracket(*token) && functions::isBracket(*nextToken) && 
+						   (functions::getType(*token) == details::OperatorType::_rightBracket)	&&
+						   (functions::getType(*nextToken) == details::OperatorType::_leftBracket);
 
-		if(twoOperands || operandAndNegative || operandAndBracket || bracketAndOperand) {
+		if(twoOperands || operandAndNegative || operandAndBracket || bracketAndOperand || bracketAndNegative || twoBrackets) {
 
 			token = tokens.insert(std::next(token), _and);
 
