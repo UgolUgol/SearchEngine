@@ -53,11 +53,18 @@ boost::optional<DocId> ExpressionNode::current() {
 	return currentDocId;
 }
 
+void OperatorAnd::concreteInitializate() {
 
-boost::optional<DocId> OperatorAnd::next() {
+	currentDocId = next(true);
 
-	if(currentDocId == boost::none) {
+}
+
+boost::optional<DocId> OperatorAnd::next(bool initializate) {
+
+	if(currentDocId == boost::none && initializate == false) {
+
 		return boost::none;
+	
 	}
 
 	auto leftDocId = left->next();
@@ -85,10 +92,15 @@ boost::optional<DocId> OperatorAnd::next() {
 	return currentDocId;
 }
 
+void OperatorOr::concreteInitializate() {
 
-boost::optional<DocId> OperatorOr::next() {
+	currentDocId = next(true);
+
+}
+
+boost::optional<DocId> OperatorOr::next(bool initializate) {
 	
-	if(currentDocId == boost::none) {
+	if(currentDocId == boost::none && initializate == false) {
 		return boost::none;
 	}
 
@@ -134,7 +146,7 @@ void OperatorNot::concreteInitializate() {
 
 	leftExcluded = 0;
 	rightExcluded = left->current() ? left->current() : boost::make_optional(maxDocId);
-	currentDocId = next();
+	currentDocId = next(true);
 
 }
 
@@ -150,10 +162,12 @@ boost::optional<DocId> OperatorNot::current() {
 	return currentDocId;
 }
 
-boost::optional<DocId> OperatorNot::next() {
+boost::optional<DocId> OperatorNot::next(bool initializate) {
 
-	if(currentDocId == boost::none) {
+	if(currentDocId == boost::none && initializate == false) {
+
 		return boost::none;
+	
 	}
 
 	++(*currentDocId);
@@ -197,7 +211,7 @@ boost::optional<DocId> OperatorNot::next() {
 	return *currentDocId;
 }
 
-boost::optional<DocId> Leaf::next() {
+boost::optional<DocId> Leaf::next(bool initializate) {
 	
 	if(position == length) {
 
