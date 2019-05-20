@@ -1,6 +1,6 @@
 #include "expression_node.h"
 
-ExpressionNode::ExpressionNode() : currentDocId(0) { }
+ExpressionNode::ExpressionNode() : currentEntry(boost::none) { }
 
 OperatorAnd::OperatorAnd() : ExpressionNode() { }
 
@@ -19,13 +19,12 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);
 		position = 0;
-		docId = index.coordBegin<DocIdType>() + offset;
-		currentDocId = **docId;
+		currentEntry = index.coordBegin<DocIdType>() + offset;
 
 	} else {
 
 		offset = length = position = 0;
-		docId = boost::none;
+		currentEntry = boost::none;
 
 	}
 }
@@ -44,35 +43,32 @@ void ExpressionNode::initializate() {
 
 void ExpressionNode::concreteInitializate() { }
 
-boost::optional<DocId> ExpressionNode::current() {
+boost::optional<Iterator> ExpressionNode::current() {
 
-	if(currentDocId && *currentDocId == 0) {
-		currentDocId = next();
-	}
+	return currentEntry;
 
-	return currentDocId;
 }
 
 void OperatorAnd::concreteInitializate() {
 
-	currentDocId = next(true);
+	currentEntry = next(true);
 
 }
 
-boost::optional<DocId> OperatorAnd::next(bool initializate) {
+boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 
-	if(currentDocId == boost::none && initializate == false) {
+	if(currentEntry == boost::none && initializate == false) {
 
 		return boost::none;
 	
 	}
 
-	auto leftDocId = left->next();
-	auto rightDocId = right->next();
+	auto leftDocId = left->current();
+	auto rightDocId = right->current();
 
-	while(leftDocId && rightDocId && (*leftDocId) != (*rightDocId)) {
+	while(leftDocId && rightDocId && std::equal(*leftDocId, *leftDocId + 1, *rightDocId)) {
 		
-		if(*leftDocId < *rightDocId) {
+		if(**leftDocId < **rightDocId) {
 
 			leftDocId = left->next();
 
@@ -84,21 +80,25 @@ boost::optional<DocId> OperatorAnd::next(bool initializate) {
 	}
 
 	if(!leftDocId || !rightDocId) {
-		currentDocId = boost::none;
+
+		currentEntry = boost::none;
+
 	} else {
-		currentDocId = leftDocId;
+
+		currentEntry = leftDocId;
+
 	}
 
-	return currentDocId;
+	return currentEntry;
 }
 
 void OperatorOr::concreteInitializate() {
 
-	currentDocId = next(true);
+	currentEntry = next(true);
 
 }
 
-boost::optional<DocId> OperatorOr::next(bool initializate) {
+boost::optional<Iterator> OperatorOr::next(bool initializate) {
 	
 	if(currentDocId == boost::none && initializate == false) {
 		return boost::none;
@@ -109,36 +109,36 @@ boost::optional<DocId> OperatorOr::next(bool initializate) {
 
 	if(leftDocId && rightDocId) {
 		
-		if(*leftDocId < *rightDocId) {
+		if(**leftDocId < **rightDocId) {
 
 				left->next();
-				currentDocId = *leftDocId;
+				currentEntry = leftDocId;
 
-		} else if(*leftDocId > *rightDocId) {
+		} else if(**leftDocId > **rightDocId) {
 
 				right->next();
-				currentDocId = *rightDocId;
+				currentEntry = rightDocId;
 
 		} else {
 			
 			left->next();
 			right->next();
-			currentDocId = *leftDocId;
+			currentEntry = leftDocId;
 
 		}
 
 	} else if(!leftDocId) {
 		
-		currentDocId = rightDocId;
+		currentEntry = rightDocId;
 		right->next();
 
 	} else if(!rightDocId) {
 		
-		currentDocId = leftDocId;
+		currentEntry = leftDocId;
 		left->next();
 
 	}
-	return currentDocId;
+	return currentEntry;
 }
 
 
@@ -146,20 +146,27 @@ void OperatorNot::concreteInitializate() {
 
 	leftExcluded = 0;
 	rightExcluded = left->current() ? left->current() : boost::make_optional(maxDocId);
-	currentDocId = next(true);
+	currentEntry = next(true);
 
 }
 
 
 boost::optional<DocId> OperatorNot::current() {
 
-	if(currentDocId <= leftExcluded || currentDocId >= rightExcluded) { 
+	if(!currentEntry) {
 
-		currentDocId = next();
+		return boost::none;
+	
+	}
+
+	auto docId = **currentEntry;
+	if(docId <= leftExcluded || docId >= rightExcluded) { 
+
+		currentEntry = next();
 
 	}
 
-	return currentDocId;
+	return currentEntry;
 }
 
 boost::optional<DocId> OperatorNot::next(bool initializate) {
@@ -211,17 +218,16 @@ boost::optional<DocId> OperatorNot::next(bool initializate) {
 	return *currentDocId;
 }
 
-boost::optional<DocId> Leaf::next(bool initializate) {
+boost::optional<Iterator> Leaf::next(bool initializate) {
 	
 	if(position == length) {
 
-		currentDocId = boost::none;
-		return currentDocId;
+		currentEntry = boost::none;
+		return currentEntry;
 
 	}
 
-	currentDocId = **docId;
 	++position;
-	++(*docId);
-	return currentDocId;
+	++(*currentEntry);
+	return currentEntry;
 }

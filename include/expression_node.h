@@ -14,15 +14,15 @@ public:
 	ExpressionNode();
 
 	void initializate();
-	virtual boost::optional<DocId> current();
-	virtual boost::optional<DocId> next(bool initialization=false) = 0;
+	virtual boost::optional<Iterator> current();
+	virtual boost::optional<Iterator> next(bool initialization=false) = 0;
 
 
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 
 protected:
-	boost::optional<DocId> currentDocId;
+	boost::optional<Iterator> currentEntry;
 private:
 	virtual void concreteInitializate();
 };
@@ -30,7 +30,7 @@ private:
 class OperatorAnd : public ExpressionNode {
 public:
 	OperatorAnd();
-	boost::optional<DocId> next(bool initialization=false) override;
+	boost::optional<Iterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -39,7 +39,7 @@ private:
 class OperatorOr : public ExpressionNode {
 public:
 	OperatorOr();
-	boost::optional<DocId> next(bool initialization=false) override;
+	boost::optional<Iterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -48,8 +48,8 @@ private:
 class OperatorNot: public ExpressionNode {
 public:
 	OperatorNot();
-	boost::optional<DocId> current() override;
-	boost::optional<DocId> next(bool initialization=false) override;
+	boost::optional<Iterator> current() override;
+	boost::optional<Iterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -63,12 +63,11 @@ class Leaf : public ExpressionNode {
 public:
 	Leaf(size_t hash, const Index<DefaultIndex>& index);
 
-	boost::optional<DocId> next(bool initialization=false) override;
+	boost::optional<Iterator> next(bool initialization=false) override;
 private:
 	size_t offset;
 	size_t length;
 	size_t position;
-	boost::optional<Iterator> docId;
 };
 
 
