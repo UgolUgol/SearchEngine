@@ -9,6 +9,25 @@ using Iterator = Index<DefaultIndex>::DocIdIterator;
 using DocId = Iterator::value_type;
 
 
+class NotIteratorAdaptor {
+public:
+	NotIteratorAdaptor();
+/*	NotIteratorAdaptor(const boost::optional<Iterator>& iterator);*/
+
+	NotIteratorAdaptor& operator=(const boost::optional<Iterator>& iterator);
+	NotIteratorAdaptor& operator++();
+	Iterator& operator*();
+
+	operator boost::optional<Iterator>();
+	operator bool();
+
+private:
+	boost::optional<Iterator> currentEntry;
+	size_t docId;
+};
+
+
+
 class ExpressionNode {
 public:
 	ExpressionNode();
@@ -54,8 +73,8 @@ public:
 private:
 	void concreteInitializate() override;
 
-	boost::optional<size_t> leftExcluded;
-	boost::optional<size_t> rightExcluded;
+	NotIteratorAdaptor specialCurrentEntry;
+	boost::optional<size_t> boundaryDocId;
 	size_t maxDocId;
 };
 
@@ -69,6 +88,9 @@ private:
 	size_t length;
 	size_t position;
 };
+
+
+
 
 
 

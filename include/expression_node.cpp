@@ -1,5 +1,53 @@
 #include "expression_node.h"
 
+NotIteratorAdaptor::NotIteratorAdaptor() : docId(0) {
+
+	currentEntry = Iterator(&docId);
+
+}
+
+NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<Iterator>& iterator) {
+
+	if(iterator) {
+
+		docId = **iterator;
+		currentEntry = Iterator(&docId);
+
+	} else {
+
+		currentEntry = boost::none;
+
+	}
+
+	return *this;
+}
+
+NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
+
+	++docId;
+	return *this;
+
+}
+
+
+Iterator& NotIteratorAdaptor::operator*() {
+
+	return *currentEntry;
+
+}
+
+NotIteratorAdaptor::operator boost::optional<Iterator>() {
+
+	return currentEntry;
+
+}
+
+NotIteratorAdaptor::operator bool() {
+
+	return currentEntry != boost::none;
+
+}
+
 ExpressionNode::ExpressionNode() : currentEntry(boost::none) { }
 
 OperatorAnd::OperatorAnd() : ExpressionNode() { }
@@ -57,7 +105,7 @@ void OperatorAnd::concreteInitializate() {
 
 boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 
-	if(currentEntry == boost::none && initializate == false) {
+	if(!currentEntry && !initializate) {
 
 		return boost::none;
 	
@@ -66,8 +114,8 @@ boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 	auto leftDocId = left->current();
 	auto rightDocId = right->current();
 
-	while(leftDocId && rightDocId && std::equal(*leftDocId, *leftDocId + 1, *rightDocId)) {
-		
+	while(leftDocId && rightDocId && **leftDocId != **rightDocId) {
+	
 		if(**leftDocId < **rightDocId) {
 
 			leftDocId = left->next();
@@ -86,6 +134,8 @@ boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 	} else {
 
 		currentEntry = leftDocId;
+		left->next();
+		right->next();
 
 	}
 
@@ -100,7 +150,7 @@ void OperatorOr::concreteInitializate() {
 
 boost::optional<Iterator> OperatorOr::next(bool initializate) {
 	
-	if(currentDocId == boost::none && initializate == false) {
+	if(currentEntry == boost::none && initializate == false) {
 		return boost::none;
 	}
 
@@ -144,78 +194,70 @@ boost::optional<Iterator> OperatorOr::next(bool initializate) {
 
 void OperatorNot::concreteInitializate() {
 
-	leftExcluded = 0;
-	rightExcluded = left->current() ? left->current() : boost::make_optional(maxDocId);
-	currentEntry = next(true);
-
+	if(left->current()) {
+		
+		boundaryDocId = **left->current();
+		
+	} else {
+		
+		boundaryDocId = maxDocId;
+	
+	}
+	specialCurrentEntry = next(true);
 }
 
 
-boost::optional<DocId> OperatorNot::current() {
+boost::optional<Iterator> OperatorNot::current() {
 
-	if(!currentEntry) {
+	if(!specialCurrentEntry) {
 
 		return boost::none;
 	
 	}
 
-	auto docId = **currentEntry;
-	if(docId <= leftExcluded || docId >= rightExcluded) { 
-
-		currentEntry = next();
-
-	}
-
-	return currentEntry;
+	return specialCurrentEntry;
 }
 
-boost::optional<DocId> OperatorNot::next(bool initializate) {
+boost::optional<Iterator> OperatorNot::next(bool initializate) {
 
-	if(currentDocId == boost::none && initializate == false) {
+
+	if(!specialCurrentEntry && !initializate) {
 
 		return boost::none;
+		
+	}
+
+
+	++specialCurrentEntry;
+	if(**specialCurrentEntry < boundaryDocId) {
+
+		return specialCurrentEntry;
+		
+	}
 	
-	}
-
-	++(*currentDocId);
-	if(currentDocId > leftExcluded && currentDocId < rightExcluded) {
-		return *currentDocId;
-	}
-
 	do {
 
-		leftExcluded  = left->current();
-		rightExcluded = left->next();
+		if(left->next() && boundaryDocId != **left->current()) {
 
-		if(!leftExcluded) {
+			boundaryDocId = **left->current();
+			++specialCurrentEntry;
 
-			leftExcluded = rightExcluded = maxDocId;
+		} else if(!left->next()){
+
+			boundaryDocId = maxDocId;
+			++specialCurrentEntry;
 			break;
-
 		}
 
-		if(!rightExcluded) {
+	} while(boundaryDocId <= **specialCurrentEntry);
 
-			rightExcluded = maxDocId;
-			break;
+	if(boundaryDocId <= **specialCurrentEntry) {
 
-		}
-	
-	} while(*rightExcluded - *leftExcluded < 2);
+		specialCurrentEntry = boost::none;
 
-
-	if(*rightExcluded - *leftExcluded < 2) {
-		
-		currentDocId = boost::none;
-		return boost::none;
-
-	} else {
-
-		currentDocId = *leftExcluded + 1;
-	
 	}
 
-	return *currentDocId;
+	return specialCurrentEntry;
 }
 
 boost::optional<Iterator> Leaf::next(bool initializate) {

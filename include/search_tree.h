@@ -44,7 +44,7 @@ std::set<size_t> SearchTree::extractResults() {
 
 	while(currentDocId != boost::none) {
 		
-		docIds.insert(*currentDocId);
+		docIds.insert(**currentDocId);
 		currentDocId = root->next();
 
 	}
