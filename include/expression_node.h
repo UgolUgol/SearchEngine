@@ -12,7 +12,6 @@ using DocId = Iterator::value_type;
 class NotIteratorAdaptor {
 public:
 	NotIteratorAdaptor();
-/*	NotIteratorAdaptor(const boost::optional<Iterator>& iterator);*/
 
 	NotIteratorAdaptor& operator=(const boost::optional<Iterator>& iterator);
 	NotIteratorAdaptor& operator++();

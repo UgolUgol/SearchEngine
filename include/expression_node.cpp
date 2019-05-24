@@ -227,7 +227,6 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 		
 	}
 
-
 	++specialCurrentEntry;
 	if(**specialCurrentEntry < boundaryDocId) {
 
