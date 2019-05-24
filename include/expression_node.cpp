@@ -115,7 +115,7 @@ boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 	auto rightDocId = right->current();
 
 	while(leftDocId && rightDocId && **leftDocId != **rightDocId) {
-	
+		
 		if(**leftDocId < **rightDocId) {
 
 			leftDocId = left->next();
@@ -126,7 +126,7 @@ boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 
 		}
 	}
-
+	
 	if(!leftDocId || !rightDocId) {
 
 		currentEntry = boost::none;
@@ -236,12 +236,13 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 	
 	do {
 
-		if(left->next() && boundaryDocId != **left->current()) {
+		auto docId = left->next();
+		if(docId && boundaryDocId != **docId) {
 
-			boundaryDocId = **left->current();
+			boundaryDocId = **docId;
 			++specialCurrentEntry;
 
-		} else if(!left->next()){
+		} else if(!docId){
 
 			boundaryDocId = maxDocId;
 			++specialCurrentEntry;
