@@ -66,7 +66,7 @@ Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
 		offset = index.getOffset(hashBlock);
 		length = index.getLength(hashBlock);
-		position = 0;
+		position = 1;
 		currentEntry = index.coordBegin<DocIdType>() + offset;
 
 	} else {
