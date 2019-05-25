@@ -15,9 +15,9 @@ int main() {
 
 	auto transformedExpression = t.transform(s);
 	auto result = req.search(transformedExpression);
-	for(const auto& block : result) {
+/*	for(const auto& block : result) {
 		std::wcout<<block.name<<std::endl<<block.url<<std::endl<<std::endl;
-	}
+	}*/
 	std::wcout<<"Results for request: "<<transformedExpression<<std::endl;
 	std::wcout<<"Results count: "<<result.size()<<std::endl;
 

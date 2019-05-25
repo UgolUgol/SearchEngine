@@ -1,8 +1,21 @@
 #include "expression_node.h"
 
-NotIteratorAdaptor::NotIteratorAdaptor() : docId(0) {
+NotIteratorAdaptor::NotIteratorAdaptor(size_t length) {
 
-	currentEntry = Iterator(&docId);
+	docIds = new size_t[length + 1];
+	
+	for(size_t idx = 0; idx < length + 1; ++idx) {
+		docIds[idx] = idx;
+	} 
+
+
+	currentEntry = SpecialIterator(docIds);
+
+}
+
+NotIteratorAdaptor::~NotIteratorAdaptor() {
+
+	delete docIds;
 
 }
 
@@ -10,8 +23,7 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<Iterator
 
 	if(iterator) {
 
-		docId = **iterator;
-		currentEntry = Iterator(&docId);
+		currentEntry = SpecialIterator((*iterator).rawPointer());
 
 	} else {
 
@@ -24,13 +36,13 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<Iterator
 
 NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
 
-	++docId;
+	++(*currentEntry);
 	return *this;
 
 }
 
 
-Iterator& NotIteratorAdaptor::operator*() {
+SpecialIterator& NotIteratorAdaptor::operator*() {
 
 	return *currentEntry;
 
@@ -38,7 +50,7 @@ Iterator& NotIteratorAdaptor::operator*() {
 
 NotIteratorAdaptor::operator boost::optional<Iterator>() {
 
-	return currentEntry;
+	return Iterator((*currentEntry).rawPointer());
 
 }
 
@@ -54,7 +66,7 @@ OperatorAnd::OperatorAnd() : ExpressionNode() { }
 
 OperatorOr::OperatorOr() : ExpressionNode() { }
 
-OperatorNot::OperatorNot() : maxDocId(14923), ExpressionNode() { }
+OperatorNot::OperatorNot() : ExpressionNode(), maxDocId(14923), specialCurrentEntry(maxDocId) { }
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
@@ -228,12 +240,19 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 	}
 
 	++specialCurrentEntry;
+
 	if(**specialCurrentEntry < boundaryDocId) {
 
 		return specialCurrentEntry;
 		
+	} else if(**specialCurrentEntry == maxDocId) {
+
+		specialCurrentEntry = boost::none;
+		return boost::none;
+
 	}
-	
+
+
 	do {
 
 		auto docId = left->next();
@@ -251,12 +270,7 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 
 	} while(boundaryDocId <= **specialCurrentEntry);
 
-	if(boundaryDocId <= **specialCurrentEntry) {
-
-		specialCurrentEntry = boost::none;
-
-	}
-
+	
 	return specialCurrentEntry;
 }
 

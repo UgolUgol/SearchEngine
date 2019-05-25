@@ -6,23 +6,26 @@
 #include "index.h"
 
 using Iterator = Index<DefaultIndex>::DocIdIterator;
+using SpecialIterator = IndexIterator<size_t, sizeof(size_t)>;
 using DocId = Iterator::value_type;
 
 
 class NotIteratorAdaptor {
 public:
-	NotIteratorAdaptor();
+
+	NotIteratorAdaptor(size_t);
+	~NotIteratorAdaptor();
 
 	NotIteratorAdaptor& operator=(const boost::optional<Iterator>& iterator);
 	NotIteratorAdaptor& operator++();
-	Iterator& operator*();
+	SpecialIterator& operator*();
 
 	operator boost::optional<Iterator>();
 	operator bool();
 
 private:
-	boost::optional<Iterator> currentEntry;
-	size_t docId;
+	boost::optional<SpecialIterator> currentEntry;
+	size_t* docIds;
 };
 
 
@@ -72,9 +75,9 @@ public:
 private:
 	void concreteInitializate() override;
 
+	size_t maxDocId;
 	NotIteratorAdaptor specialCurrentEntry;
 	boost::optional<size_t> boundaryDocId;
-	size_t maxDocId;
 };
 
 class Leaf : public ExpressionNode {
