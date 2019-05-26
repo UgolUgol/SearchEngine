@@ -6,12 +6,13 @@
 #include "index.h"
 
 using Iterator = Index<DefaultIndex>::DocIdIterator;
-using SpecialIterator = IndexIterator<size_t, sizeof(size_t)>;
 using DocId = Iterator::value_type;
 
 
 class NotIteratorAdaptor {
 public:
+	
+	using SpecialIterator = IndexIterator<size_t, sizeof(size_t)>;
 
 	NotIteratorAdaptor(size_t);
 	~NotIteratorAdaptor();

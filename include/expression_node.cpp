@@ -42,7 +42,7 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
 }
 
 
-SpecialIterator& NotIteratorAdaptor::operator*() {
+NotIteratorAdaptor::SpecialIterator& NotIteratorAdaptor::operator*() {
 
 	return *currentEntry;
 
@@ -126,9 +126,9 @@ boost::optional<Iterator> OperatorAnd::next(bool initializate) {
 	auto leftDocId = left->current();
 	auto rightDocId = right->current();
 
-	while(leftDocId && rightDocId && **leftDocId != **rightDocId) {
+	while(leftDocId && rightDocId && !algorithms::equal(*leftDocId, *rightDocId)) {
 		
-		if(**leftDocId < **rightDocId) {
+		if(algorithms::less(*leftDocId, *rightDocId)) {
 
 			leftDocId = left->next();
 
@@ -171,12 +171,12 @@ boost::optional<Iterator> OperatorOr::next(bool initializate) {
 
 	if(leftDocId && rightDocId) {
 		
-		if(**leftDocId < **rightDocId) {
+		if(algorithms::less(*leftDocId, *rightDocId)) {
 
 				left->next();
 				currentEntry = leftDocId;
 
-		} else if(**leftDocId > **rightDocId) {
+		} else if(algorithms::greater(*leftDocId, *rightDocId)) {
 
 				right->next();
 				currentEntry = rightDocId;

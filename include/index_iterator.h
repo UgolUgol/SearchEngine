@@ -47,7 +47,7 @@ public:
 	friend difference_type operator-(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
 		return (lhs.ptr - rhs.ptr) / NodeSize;
 	}
-	
+
 	RawMemory rawPointer() const { return ptr; };
 private:
 	RawMemory ptr;
@@ -151,4 +151,23 @@ IndexIterator<NodeType, NodeSize> IndexIterator<NodeType, NodeSize>::operator-(s
 template<typename NodeType, size_t NodeSize>
 NodeType& IndexIterator<NodeType, NodeSize>::operator[](size_t idx) const {
 	return *(*this + idx);
+}
+
+
+namespace algorithms {
+
+	template<typename NodeType, size_t NodeSize>
+	bool less(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+		return *lhs < *rhs;
+	}
+
+	template<typename NodeType, size_t NodeSize>
+	bool greater(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+		return *lhs > *rhs;
+	}
+
+	template<typename NodeType, size_t NodeSize>
+	bool equal(const IndexIterator<NodeType, NodeSize>& lhs, const IndexIterator<NodeType, NodeSize>& rhs) {
+		return *lhs == *rhs;
+	}
 }
