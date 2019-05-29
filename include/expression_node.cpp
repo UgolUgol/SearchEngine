@@ -1,10 +1,10 @@
 #include "expression_node.h"
 
-NotIteratorAdaptor::NotIteratorAdaptor(size_t length) {
+NotIteratorAdaptor::NotIteratorAdaptor(size_t _length) : length(_length){
 
-	docIds = new size_t[length + 1];
+	docIds = new size_t[length];
 	
-	for(size_t idx = 0; idx < length + 1; ++idx) {
+	for(size_t idx = 0; idx < length; ++idx) {
 		docIds[idx] = idx;
 	} 
 
@@ -36,7 +36,15 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<Iterator
 
 NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
 
-	++(*currentEntry);
+	if(!currentEntry || **currentEntry == length - 1) {
+
+		currentEntry = boost::none;
+
+	} else {
+
+		++(*currentEntry);
+	
+	}
 	return *this;
 
 }
@@ -49,6 +57,12 @@ NotIteratorAdaptor::SpecialIterator& NotIteratorAdaptor::operator*() {
 }
 
 NotIteratorAdaptor::operator boost::optional<Iterator>() {
+
+	if(!currentEntry) {
+
+		return boost::none;
+	
+	}
 
 	return Iterator((*currentEntry).rawPointer());
 
@@ -233,25 +247,19 @@ boost::optional<Iterator> OperatorNot::current() {
 boost::optional<Iterator> OperatorNot::next(bool initializate) {
 
 
+	++specialCurrentEntry;
+
 	if(!specialCurrentEntry && !initializate) {
 
 		return boost::none;
 		
 	}
 
-	++specialCurrentEntry;
-
 	if(**specialCurrentEntry < boundaryDocId) {
 
 		return specialCurrentEntry;
 		
-	} else if(**specialCurrentEntry == maxDocId) {
-
-		specialCurrentEntry = boost::none;
-		return boost::none;
-
 	}
-
 
 	do {
 
@@ -262,7 +270,7 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 			++specialCurrentEntry;
 
 		} else if(!docId){
-
+			
 			boundaryDocId = maxDocId;
 			++specialCurrentEntry;
 			break;

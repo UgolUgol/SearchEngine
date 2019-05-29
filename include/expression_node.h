@@ -27,6 +27,8 @@ public:
 private:
 	boost::optional<SpecialIterator> currentEntry;
 	size_t* docIds;
+	size_t length;
+	
 };
 
 
