@@ -19,7 +19,7 @@ NotIteratorAdaptor::~NotIteratorAdaptor() {
 
 }
 
-NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<Iterator>& iterator) {
+NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<DocIdIterator>& iterator) {
 
 	if(iterator) {
 
@@ -56,7 +56,7 @@ NotIteratorAdaptor::SpecialIterator& NotIteratorAdaptor::operator*() {
 
 }
 
-NotIteratorAdaptor::operator boost::optional<Iterator>() {
+NotIteratorAdaptor::operator boost::optional<DocIdIterator>() {
 
 	if(!currentEntry) {
 
@@ -64,7 +64,7 @@ NotIteratorAdaptor::operator boost::optional<Iterator>() {
 	
 	}
 
-	return Iterator((*currentEntry).rawPointer());
+	return DocIdIterator((*currentEntry).rawPointer());
 
 }
 
@@ -81,6 +81,25 @@ OperatorAnd::OperatorAnd() : ExpressionNode() { }
 OperatorOr::OperatorOr() : ExpressionNode() { }
 
 OperatorNot::OperatorNot() : ExpressionNode(), maxDocId(14923), specialCurrentEntry(maxDocId) { }
+
+OperatorQuote::OperatorQuote(size_t limit, const Index<DefaultIndex>& index) {
+
+	using DocIdType = typename Index<DefaultIndex>::DocId;
+	using PositionType = typename Index<DefaultIndex>::Position;
+
+	quoteBlock = std::make_shared<QuoteBlock>(limit);
+	docIdBegin = index.coordBegin<DocIdType>();
+	positionBegin = index.coordBegin<PositionType>();
+
+}
+
+OperatorQuote::OperatorQuote(const OperatorQuote& node) {
+
+	quoteBlock = node.quoteBlock;
+	positionBegin = node.positionBegin;
+	docIdBegin = node.docIdBegin;
+
+}
 
 Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
 
@@ -117,7 +136,7 @@ void ExpressionNode::initializate() {
 
 void ExpressionNode::concreteInitializate() { }
 
-boost::optional<Iterator> ExpressionNode::current() {
+boost::optional<DocIdIterator> ExpressionNode::current() {
 
 	return currentEntry;
 
@@ -129,7 +148,7 @@ void OperatorAnd::concreteInitializate() {
 
 }
 
-boost::optional<Iterator> OperatorAnd::next(bool initializate) {
+boost::optional<DocIdIterator> OperatorAnd::next(bool initializate) {
 
 	if(!currentEntry && !initializate) {
 
@@ -174,7 +193,7 @@ void OperatorOr::concreteInitializate() {
 
 }
 
-boost::optional<Iterator> OperatorOr::next(bool initializate) {
+boost::optional<DocIdIterator> OperatorOr::next(bool initializate) {
 	
 	if(currentEntry == boost::none && initializate == false) {
 		return boost::none;
@@ -233,7 +252,7 @@ void OperatorNot::concreteInitializate() {
 }
 
 
-boost::optional<Iterator> OperatorNot::current() {
+boost::optional<DocIdIterator> OperatorNot::current() {
 
 	if(!specialCurrentEntry) {
 
@@ -244,7 +263,7 @@ boost::optional<Iterator> OperatorNot::current() {
 	return specialCurrentEntry;
 }
 
-boost::optional<Iterator> OperatorNot::next(bool initializate) {
+boost::optional<DocIdIterator> OperatorNot::next(bool initializate) {
 
 
 	++specialCurrentEntry;
@@ -282,7 +301,72 @@ boost::optional<Iterator> OperatorNot::next(bool initializate) {
 	return specialCurrentEntry;
 }
 
-boost::optional<Iterator> Leaf::next(bool initializate) {
+boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
+
+	if(!currentEntry && initializate) {
+		
+		return boost::none;
+
+	}
+
+	auto leftDocId = left->current();
+	auto rightDocId = right->current();
+	auto previousDifference = quoteBlock->lowerBound;
+	auto upperBound = quoteBlock->upperBound;
+
+	while(leftDocId && rightDocId) {
+
+		if(algorithms::equal(*leftDocId, *rightDocId)) {
+
+			auto leftOffset = std::distance(docIdBegin, *leftDocId);
+			auto rightOffset = std::distance(docIdBegin, *rightDocId);
+
+			auto leftPosition = positionBegin + leftOffset;
+			auto rightPosition = positionBegin + rightOffset;
+			auto currentDifference = *leftPosition - *rightPosition;
+
+			if(currentDifference <= 0) {
+
+				leftDocId = left->next();
+
+			} else if(currentDifference <= previousDifference || currentDifference > upperBound) {
+
+				rightDocId = right->next();
+
+			} else if( currentDifference > previousDifference && currentDifference <= upperBound) {
+
+				quoteBlock->lowerBound = currentDifference;
+				currentEntry = leftDocId;
+				right->next();
+				break;
+
+			}
+
+		} else {
+
+			if(algorithms::less(*leftDocId, *rightDocId)) {
+
+				leftDocId = left->next();
+
+			} else {
+
+				rightDocId = right->next();
+
+			}
+		}
+	}
+
+	if(!leftDocId || ! rightDocId) {
+
+		currentEntry = boost::none;
+
+	}
+
+	return currentEntry;
+
+}
+
+boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 	
 	if(position == length) {
 

@@ -49,7 +49,7 @@ namespace Traits {
 
 namespace details 
 {
-	enum class OperatorType : size_t { _not, _and, _or, _leftBracket, _rightBracket, _operand};
+	enum class OperatorType : size_t { _not, _and, _or, _quote, _leftBracket, _rightBracket, _operand};
 	template<typename T> using OperatorsMap = std::map<std::basic_string<T>, std::pair<size_t, OperatorType>>;
 
 	template<typename T>
@@ -68,6 +68,7 @@ namespace details
 	{ 
 		{"!", {3, OperatorType::_not}},
 		{"&&", {2, OperatorType::_and}},
+		{"+", {2, OperatorType::_quote}},
 		{"||", {1, OperatorType::_or}}
 	};
 	const OperatorsMap<char> ConstantsTraits<char>::brackets = 
@@ -90,6 +91,7 @@ namespace details
 	{ 
 		{L"!", {3, OperatorType::_not}},
 		{L"&&", {2, OperatorType::_and}},
+		{L"+", {2, OperatorType::_quote}},
 		{L"||", {1, OperatorType::_or}}
 	};
 	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::brackets = 

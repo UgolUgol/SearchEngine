@@ -5,8 +5,8 @@
 #include <boost/optional.hpp>
 #include "index.h"
 
-using Iterator = Index<DefaultIndex>::DocIdIterator;
-using DocId = Iterator::value_type;
+using DocIdIterator = Index<DefaultIndex>::DocIdIterator;
+using PositionIterator = Index<DefaultIndex>::PositionIterator;
 
 
 class NotIteratorAdaptor {
@@ -17,11 +17,11 @@ public:
 	NotIteratorAdaptor(size_t);
 	~NotIteratorAdaptor();
 
-	NotIteratorAdaptor& operator=(const boost::optional<Iterator>& iterator);
+	NotIteratorAdaptor& operator=(const boost::optional<DocIdIterator>& iterator);
 	NotIteratorAdaptor& operator++();
 	SpecialIterator& operator*();
 
-	operator boost::optional<Iterator>();
+	operator boost::optional<DocIdIterator>();
 	operator bool();
 
 private:
@@ -38,15 +38,15 @@ public:
 	ExpressionNode();
 
 	void initializate();
-	virtual boost::optional<Iterator> current();
-	virtual boost::optional<Iterator> next(bool initialization=false) = 0;
+	virtual boost::optional<DocIdIterator> current();
+	virtual boost::optional<DocIdIterator> next(bool initialization=false) = 0;
 
 
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 
 protected:
-	boost::optional<Iterator> currentEntry;
+	boost::optional<DocIdIterator> currentEntry;
 private:
 	virtual void concreteInitializate();
 };
@@ -54,7 +54,7 @@ private:
 class OperatorAnd : public ExpressionNode {
 public:
 	OperatorAnd();
-	boost::optional<Iterator> next(bool initialization=false) override;
+	boost::optional<DocIdIterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -63,7 +63,7 @@ private:
 class OperatorOr : public ExpressionNode {
 public:
 	OperatorOr();
-	boost::optional<Iterator> next(bool initialization=false) override;
+	boost::optional<DocIdIterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -72,8 +72,8 @@ private:
 class OperatorNot: public ExpressionNode {
 public:
 	OperatorNot();
-	boost::optional<Iterator> current() override;
-	boost::optional<Iterator> next(bool initialization=false) override;
+	boost::optional<DocIdIterator> current() override;
+	boost::optional<DocIdIterator> next(bool initialization=false) override;
 
 private:
 	void concreteInitializate() override;
@@ -83,11 +83,29 @@ private:
 	boost::optional<size_t> boundaryDocId;
 };
 
+struct QuoteBlock {
+	size_t lowerBound;
+	size_t upperBound;
+	QuoteBlock(size_t _upperBound) : lowerBound(0), upperBound(_upperBound) { }
+};
+
+class OperatorQuote : public ExpressionNode {
+public:
+
+	OperatorQuote(std::size_t limit, const Index<DefaultIndex>& index);
+	OperatorQuote(const OperatorQuote& node);
+
+	boost::optional<DocIdIterator> next(bool initialization=false) override;
+private:
+	DocIdIterator docIdBegin;
+	PositionIterator positionBegin;
+	std::shared_ptr<QuoteBlock> quoteBlock;
+};
+
 class Leaf : public ExpressionNode {
 public:
-	Leaf(size_t hash, const Index<DefaultIndex>& index);
-
-	boost::optional<Iterator> next(bool initialization=false) override;
+	Leaf(std::size_t hash, const Index<DefaultIndex>& index);
+	boost::optional<DocIdIterator> next(bool initialization=false) override;
 private:
 	size_t offset;
 	size_t length;
