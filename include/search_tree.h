@@ -22,6 +22,7 @@ private:
 	template<typename T> auto makeInverseExpression(T&& expression);
 	template<typename T> auto convertToInternalView(const std::vector<T>& expression);
 	std::unique_ptr<ExpressionNode> makeTreeFromExpression(std::stack<ExpressionPart>& expression);
+	std::unique_ptr<ExpressionNode> makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuote& quote);
 };
 
 SearchTree::SearchTree() : index("../index/files/dict.bin", "../index/files/coord.bin") {
@@ -56,7 +57,7 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 	std::unique_ptr<ExpressionNode> node;
 	auto nodeType = expression.top().first;
-	auto hash = expression.top().second;
+	auto nodeProperty = expression.top().second;
 	expression.pop();
 
 	if(nodeType == details::OperatorType::_and) {
@@ -78,12 +79,15 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 	} else if(nodeType == details::OperatorType::_quote) {
 
-		node = std::make_unique<OperatorQuote>(0, index);
-		node->left = makeTreeFromExpression(expression);
-		node->right = makeTreeFromExpression(expression);
+		auto distanceLimit = nodeProperty;
+		OperatorQuote quote(distanceLimit, index);
+
+		expression.push(ExpressionPart{nodeType, nodeProperty}); 
+		node = makeQuote(expression, quote);
 
 	} else if(nodeType == details::OperatorType::_operand) {
 
+		auto hash = nodeProperty;
 		node = std::make_unique<Leaf>(hash, index);
 		node->left = nullptr;
 		node->right = nullptr;
@@ -92,6 +96,34 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 	return node;
 }
+
+
+std::unique_ptr<ExpressionNode> 
+SearchTree::makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuote& quote) {
+
+	std::unique_ptr<ExpressionNode> node;
+	auto nodeType = expression.top().first;
+	auto nodeProperty = expression.top().second;
+	expression.pop();
+
+	if(nodeType == details::OperatorType::_quote) {
+
+		node = std::make_unique<OperatorQuote>(quote);
+		node->left = makeQuote(expression, quote);
+		node->right = makeQuote(expression, quote);
+
+	} else if(nodeType == details::OperatorType::_operand) {
+
+		auto hash = nodeProperty;
+		node = std::make_unique<Leaf>(hash, index);
+		node->left = nullptr;
+		node->right = nullptr;
+
+	}
+
+	return node;
+}
+
 
 template<typename T>
 auto SearchTree::makeInverseExpression(T&& expression) {
