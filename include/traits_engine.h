@@ -164,7 +164,7 @@ namespace functions {
 		}
 
 		auto op = token.substr(0, 1);
-		auto containsQuoteLimit = (isOperator(op) && getType(op) == details::ConstantsTraits<T>::_quoteLimit);
+		auto containsQuoteLimit = (isOperator(op) && getType(op) == details::OperatorType::_quoteLimit);
 		auto isNumber = [](T character) { return std::isdigit(character); };
 
 		return containsQuoteLimit && std::all_of(token.begin() + 1, token.end(), isNumber);
