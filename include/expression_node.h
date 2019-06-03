@@ -76,11 +76,12 @@ public:
 	boost::optional<DocIdIterator> next(bool initialization=false) override;
 
 private:
-	void concreteInitializate() override;
 
 	size_t maxDocId;
 	NotIteratorAdaptor specialCurrentEntry;
 	boost::optional<size_t> boundaryDocId;
+	
+	void concreteInitializate() override;
 };
 
 struct QuoteBlock {
@@ -96,10 +97,17 @@ public:
 	OperatorQuote(const OperatorQuote& node);
 
 	boost::optional<DocIdIterator> next(bool initialization=false) override;
+	void quoteContinue() const;
+
 private:
 	DocIdIterator docIdBegin;
 	PositionIterator positionBegin;
+	mutable bool quoteBegin; 
+
 	std::shared_ptr<QuoteBlock> quoteBlock;
+
+	void resetLowerBound();
+	void concreteInitializate() override;
 };
 
 class Leaf : public ExpressionNode {

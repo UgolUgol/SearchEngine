@@ -90,11 +90,13 @@ OperatorQuote::OperatorQuote(size_t limit, const Index<DefaultIndex>& index) {
 	quoteBlock = std::make_shared<QuoteBlock>(limit);
 	docIdBegin = index.coordBegin<DocIdType>();
 	positionBegin = index.coordBegin<PositionType>();
+	quoteBegin = true;
 
 }
 
 OperatorQuote::OperatorQuote(const OperatorQuote& node) {
 
+	quoteBegin = node.quoteBegin;
 	quoteBlock = node.quoteBlock;
 	positionBegin = node.positionBegin;
 	docIdBegin = node.docIdBegin;
@@ -301,9 +303,28 @@ boost::optional<DocIdIterator> OperatorNot::next(bool initializate) {
 	return specialCurrentEntry;
 }
 
+
+void OperatorQuote::concreteInitializate() {
+
+	currentEntry = next(true);
+
+}
+
+void OperatorQuote::quoteContinue() const {
+
+	quoteBegin = false;
+
+}
+
+void OperatorQuote::resetLowerBound() {
+
+	quoteBlock->lowerBound = 0;
+
+}
+
 boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
-	if(!currentEntry && initializate) {
+	if(!currentEntry && !initializate) {
 		
 		return boost::none;
 
@@ -323,9 +344,9 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 			auto leftPosition = positionBegin + leftOffset;
 			auto rightPosition = positionBegin + rightOffset;
-			auto currentDifference = *leftPosition - *rightPosition;
-
-			if(currentDifference <= 0) {
+			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
+			
+			if(currentDifference == 0) {
 
 				leftDocId = left->next();
 
@@ -356,9 +377,16 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 		}
 	}
 
+
 	if(!leftDocId || ! rightDocId) {
 
 		currentEntry = boost::none;
+
+	}
+
+	if(quoteBegin) {
+
+		resetLowerBound();
 
 	}
 

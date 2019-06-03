@@ -82,7 +82,6 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 		auto distanceLimit = nodeProperty;
 		OperatorQuote quote(distanceLimit, index);
-
 		node = makeQuote(expression, quote);
 
 	} else if(nodeType == details::OperatorType::_operand) {
@@ -109,6 +108,8 @@ SearchTree::makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuot
 	if(nodeType == details::OperatorType::_quote) {
 
 		node = std::make_unique<OperatorQuote>(quote);
+		quote.quoteContinue();
+		
 		node->left = makeQuote(expression, quote);
 		node->right = makeQuote(expression, quote);
 
