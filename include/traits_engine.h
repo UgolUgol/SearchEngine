@@ -66,7 +66,7 @@ namespace details
 	};
 	const OperatorsMap<char> ConstantsTraits<char>::operators = 
 	{ 
-		{"+", {4, OperatorType::_quote}},
+		{"+", {5, OperatorType::_quote}},
 		{"\\", {4, OperatorType::_quoteLimit}},
 		{"!", {3, OperatorType::_not}},
 		{"&&", {2, OperatorType::_and}},
@@ -90,7 +90,7 @@ namespace details
 	};
 	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::operators = 
 	{ 
-		{L"+", {4, OperatorType::_quote}},
+		{L"+", {5, OperatorType::_quote}},
 		{L"\\", {4, OperatorType::_quoteLimit}},
 		{L"!", {3, OperatorType::_not}},
 		{L"&&", {2, OperatorType::_and}},
@@ -108,11 +108,6 @@ namespace details
 namespace functions {
 
 
-	template<typename T> 
-	size_t getPriority(const std::basic_string<T>& token) 
-	{ 
-		return details::ConstantsTraits<T>::operators.find(token)->second.first;
-	}
 
 	template<typename T>
 	details::OperatorType getType(const std::basic_string<T>& token)
@@ -169,6 +164,19 @@ namespace functions {
 
 		return containsQuoteLimit && std::all_of(token.begin() + 1, token.end(), isNumber);
 
+	}
+
+	template<typename T> 
+	size_t getPriority(const std::basic_string<T>& token) 
+	{ 	
+
+		if(isQuoteLimit(token)) {
+
+			return details::ConstantsTraits<T>::operators.find(token.substr(0, 1))->second.first;
+
+		}
+
+		return details::ConstantsTraits<T>::operators.find(token)->second.first;
 	}
 
 };

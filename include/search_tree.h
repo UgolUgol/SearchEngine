@@ -82,6 +82,7 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 
 		auto distanceLimit = nodeProperty;
 		OperatorQuote quote(distanceLimit, index);
+
 		node = makeQuote(expression, quote);
 
 	} else if(nodeType == details::OperatorType::_operand) {
@@ -135,7 +136,7 @@ auto SearchTree::makeInverseExpression(T&& expression) {
 	typename ExpressionTraits<ClearType>::OperandType token;
 
 	while(std::getline(handler, token, ExpressionTraits<ClearType>::ConstantsTraits::delimiter)) {
-		
+
 		if(functions::isOperator(token) || functions::isQuoteLimit(token)) {
 
 			if(operators.empty()) {
@@ -196,16 +197,16 @@ auto SearchTree::convertToInternalView(const std::vector<T>& expression) {
 	std::stack<ExpressionPart> resultExpression;
 	for(const auto& token : expression) {
 
-		if(functions::isOperand(token)) {
-
-			auto hash = std::hash<T>{}(token);
-			resultExpression.push(std::make_pair(details::OperatorType::_operand, hash));
-		
-		} else if(functions::isQuoteLimit(token)) {
+		if(functions::isQuoteLimit(token)) {
 
 			auto distanceLimit = boost::lexical_cast<size_t>(token.substr(1));
 			resultExpression.push(std::make_pair(details::OperatorType::_quoteLimit, distanceLimit));
 
+		} else if(functions::isOperand(token)) {
+
+			auto hash = std::hash<T>{}(token);
+			resultExpression.push(std::make_pair(details::OperatorType::_operand, hash));
+		
 		} else {
 
 			resultExpression.push(std::make_pair(functions::getType(token), 0));
