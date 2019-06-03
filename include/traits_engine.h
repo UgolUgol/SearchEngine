@@ -49,7 +49,7 @@ namespace Traits {
 
 namespace details 
 {
-	enum class OperatorType : size_t { _not, _and, _or, _quote, _leftBracket, _rightBracket, _operand};
+	enum class OperatorType : size_t { _not, _and, _or, _quote, _quoteLimit, _leftBracket, _rightBracket, _operand};
 	template<typename T> using OperatorsMap = std::map<std::basic_string<T>, std::pair<size_t, OperatorType>>;
 
 	template<typename T>
@@ -66,9 +66,10 @@ namespace details
 	};
 	const OperatorsMap<char> ConstantsTraits<char>::operators = 
 	{ 
+		{"+", {4, OperatorType::_quote}},
+		{"\\", {4, OperatorType::_quoteLimit}},
 		{"!", {3, OperatorType::_not}},
 		{"&&", {2, OperatorType::_and}},
-		{"+", {2, OperatorType::_quote}},
 		{"||", {1, OperatorType::_or}}
 	};
 	const OperatorsMap<char> ConstantsTraits<char>::brackets = 
@@ -89,9 +90,10 @@ namespace details
 	};
 	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::operators = 
 	{ 
+		{L"+", {4, OperatorType::_quote}},
+		{L"\\", {4, OperatorType::_quoteLimit}},
 		{L"!", {3, OperatorType::_not}},
 		{L"&&", {2, OperatorType::_and}},
-		{L"+", {2, OperatorType::_quote}},
 		{L"||", {1, OperatorType::_or}}
 	};
 	const OperatorsMap<wchar_t> ConstantsTraits<wchar_t>::brackets = 
@@ -104,6 +106,26 @@ namespace details
 
 
 namespace functions {
+
+
+	template<typename T> 
+	size_t getPriority(const std::basic_string<T>& token) 
+	{ 
+		return details::ConstantsTraits<T>::operators.find(token)->second.first;
+	}
+
+	template<typename T>
+	details::OperatorType getType(const std::basic_string<T>& token)
+	{	
+		auto op = details::ConstantsTraits<T>::operators.find(token);
+		if(op == details::ConstantsTraits<T>::operators.cend()) {
+
+			op = details::ConstantsTraits<T>::brackets.find(token);
+
+		}
+		return op->second.second;
+	}
+
 
 
 	template<typename T> 
@@ -131,25 +153,23 @@ namespace functions {
 
 	}
 
-
-	template<typename T> 
-	size_t getPriority(const std::basic_string<T>& token) 
-	{ 
-		return details::ConstantsTraits<T>::operators.find(token)->second.first;
-	}
-
 	template<typename T>
-	details::OperatorType getType(const std::basic_string<T>& token)
-	{	
-		auto op = details::ConstantsTraits<T>::operators.find(token);
-		if(op == details::ConstantsTraits<T>::operators.cend()) {
+	bool isQuoteLimit(const std::basic_string<T>& token) 
+	{
 
-			op = details::ConstantsTraits<T>::brackets.find(token);
+		if(token.size() < 2) {
 
+			return false;
+		
 		}
-		return op->second.second;
-	}
 
+		auto op = token.substr(0, 1);
+		auto containsQuoteLimit = (isOperator(op) && getType(op) == details::ConstantsTraits<T>::_quoteLimit);
+		auto isNumber = [](T character) { return std::isdigit(character); };
+
+		return containsQuoteLimit && std::all_of(token.begin() + 1, token.end(), isNumber);
+
+	}
 
 };
 
