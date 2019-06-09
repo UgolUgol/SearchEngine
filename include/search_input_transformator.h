@@ -17,23 +17,48 @@ namespace details {
 
 		static constexpr const char* space = " ";
 		static constexpr const char* _and = "&&";
-		static constexpr const char* binaryOperatorsRegex = "(&&|\\|\\||\\(\\))";
+		static constexpr const char* _quoteUnion = "+";
+		static constexpr const char* _quote = "'";
+		static constexpr const char* _backslash = "\\";
+		static constexpr const char* binaryOperatorsRegex = "(\\\\[0-9]*|'|&&|\\|\\||\\(\\))";
 		static constexpr const char* binaryOperatorsRegexReplace = " $1 ";
 
 	};
-
 
 	template<> 
 	struct TransformatorTraits<wchar_t> {
 
 		static constexpr const wchar_t* space = L" ";
 		static constexpr const wchar_t* _and = L"&&";
-		static constexpr const wchar_t* binaryOperatorsRegex = L"(&&|\\|\\||\\!|\\(|\\))";
+		static constexpr const wchar_t* _quoteUnion = L"+";
+		static constexpr const wchar_t* _quote = L"'";
+		static constexpr const wchar_t* _backslash = L"\\";
+		static constexpr const wchar_t* binaryOperatorsRegex = L"(\\\\[0-9]*|'|&&|\\|\\||\\!|\\(|\\))";
 		static constexpr const wchar_t* binaryOperatorsRegexReplace = L" $1 ";
 
 	};
+
 }
 
+namespace functions {
+
+	template<typename T> std::basic_string<T> numericToString(std::size_t);
+	
+	template<> std::wstring numericToString<wchar_t>(std::size_t number) 
+	{ 
+		return std::to_wstring(number); 
+	}
+
+	template<> std::string numericToString<char>(std::size_t number) 
+	{ 
+		return std::to_string(number); 
+	}
+
+	template<typename T> bool isQuote(const std::basic_string<T>& token)
+	{	
+		return token == details::TransformatorTraits<T>::_quote;
+	}
+}
 
 template<typename T> class InputTransformator { };
 
@@ -44,6 +69,7 @@ public:
 private:
 	std::basic_string<T>&& correctUnspacedParts(std::basic_string<T>&& input);
 	std::list<std::basic_string<T>> splitInTokensList(std::basic_string<T>&& input);
+	std::list<std::basic_string<T>>&& quotesConversion(std::list<std::basic_string<T>>&& tokens);
 	std::basic_string<T> concatenateTokens(std::list<std::basic_string<T>>&& tokens);
 };
 
@@ -51,7 +77,7 @@ private:
 template<typename T>
 std::basic_string<T> InputTransformator<std::basic_string<T>>::transform(std::basic_string<T>& input) {
 
-	return concatenateTokens(splitInTokensList(correctUnspacedParts(std::move(input))));
+	return concatenateTokens(quotesConversion(splitInTokensList(correctUnspacedParts(std::move(input)))));
 
 };
 
@@ -84,6 +110,48 @@ std::list<std::basic_string<T>> InputTransformator<std::basic_string<T>>
 }
 
 template<typename T>
+std::list<std::basic_string<T>>&& InputTransformator<std::basic_string<T>>
+::quotesConversion(std::list<std::basic_string<T>>&& tokens) 
+{
+	auto quoteUnion = details::TransformatorTraits<T>::_quoteUnion;
+	auto backslash = details::TransformatorTraits<T>::_backslash;
+	auto quote = details::TransformatorTraits<T>::_quote;
+
+	for(auto token = tokens.begin(); token != tokens.end(); ++token) {
+
+		if(*token == quote) {
+			
+			size_t distance = 0;
+			token = tokens.erase(token);
+
+			while(std::distance(token, tokens.end()) > 1 && 
+				  !functions::isOperator(*std::next(token)) && !functions::isQuote(*std::next(token))) {
+
+				token = tokens.insert(std::next(token), quoteUnion);
+				++token;
+				++distance;
+
+			}
+			
+			++token;
+			if(token != tokens.end() && functions::isQuote(*token)) {
+
+				token = tokens.erase(token);
+
+			}
+
+		 	if(token == tokens.end() || (*token).substr(0, 1) != backslash) {
+				token = tokens.insert(token, backslash + functions::numericToString<T>(distance));
+				++token;
+			}
+		}
+	}
+
+	return std::move(tokens);
+}
+
+
+template<typename T>
 std::basic_string<T> InputTransformator<std::basic_string<T>>
 ::concatenateTokens(std::list<std::basic_string<T>>&& tokens) {
 
@@ -112,7 +180,10 @@ std::basic_string<T> InputTransformator<std::basic_string<T>>
 						   (functions::getType(*token) == details::OperatorType::_rightBracket)	&&
 						   (functions::getType(*nextToken) == details::OperatorType::_leftBracket);
 
-		if(twoOperands || operandAndNegative || operandAndBracket || bracketAndOperand || bracketAndNegative || twoBrackets) {
+		bool quoteLimitAndOperand = functions::isQuoteLimit(*token) && functions::isOperand(*nextToken);
+		
+		if(twoOperands || operandAndNegative || operandAndBracket ||
+		   bracketAndOperand || bracketAndNegative || twoBrackets || quoteLimitAndOperand) {
 
 			token = tokens.insert(std::next(token), _and);
 

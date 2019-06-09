@@ -140,13 +140,6 @@ namespace functions {
 	}
 
 
-	template<typename T>
-	bool isOperand(const std::basic_string<T>& token) 
-	{
-
-		return !isOperator(token) && !isBracket(token);
-
-	}
 
 	template<typename T>
 	bool isQuoteLimit(const std::basic_string<T>& token) 
@@ -166,6 +159,13 @@ namespace functions {
 
 	}
 
+	template<typename T>
+	bool isOperand(const std::basic_string<T>& token) 
+	{
+
+		return !isOperator(token) && !isBracket(token) && !isQuoteLimit(token);
+
+	}
 	template<typename T> 
 	size_t getPriority(const std::basic_string<T>& token) 
 	{ 	
