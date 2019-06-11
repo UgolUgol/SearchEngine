@@ -335,7 +335,8 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 	auto previousDifference = quoteBlock->lowerBound;
 	auto upperBound = quoteBlock->upperBound;
 
-	while(leftDocId && rightDocId) {
+	bool found = false;
+	while(leftDocId && rightDocId && !found) {
 
 		if(algorithms::equal(*leftDocId, *rightDocId)) {
 
@@ -345,9 +346,10 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 			auto leftPosition = positionBegin + leftOffset;
 			auto rightPosition = positionBegin + rightOffset;
 			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
-			
+		
 			if(currentDifference == 0) {
 
+				resetLowerBound();
 				leftDocId = left->next();
 
 			} else if(currentDifference <= previousDifference || currentDifference > upperBound) {
@@ -359,7 +361,7 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 				quoteBlock->lowerBound = currentDifference;
 				currentEntry = leftDocId;
 				right->next();
-				break;
+				found = true;
 
 			}
 
@@ -367,6 +369,7 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 			if(algorithms::less(*leftDocId, *rightDocId)) {
 
+				resetLowerBound();
 				leftDocId = left->next();
 
 			} else {
@@ -377,21 +380,17 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 		}
 	}
 
+	if(found && quoteBegin) {
 
-	if(!leftDocId || ! rightDocId) {
+		resetLowerBound();
+		
+	} else if(!found) {
 
 		currentEntry = boost::none;
 
 	}
 
-	if(quoteBegin) {
-
-		resetLowerBound();
-
-	}
-
 	return currentEntry;
-
 }
 
 boost::optional<DocIdIterator> Leaf::next(bool initializate) {
