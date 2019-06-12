@@ -347,16 +347,16 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 			auto rightPosition = positionBegin + rightOffset;
 			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
 		
-			if(currentDifference == 0) {
+			if(currentDifference == 0 || currentDifference <= quoteBlock->lowerBound) {
 
 				resetLowerBound();
 				leftDocId = left->next();
 
-			} else if(currentDifference <= previousDifference || currentDifference > upperBound) {
+			} else if(currentDifference > upperBound) {
 
 				rightDocId = right->next();
 
-			} else if( currentDifference > previousDifference && currentDifference <= upperBound) {
+			} else if( currentDifference > quoteBlock->lowerBound && currentDifference <= upperBound) {
 
 				quoteBlock->lowerBound = currentDifference;
 				currentEntry = leftDocId;
