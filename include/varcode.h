@@ -6,7 +6,7 @@
 
 namespace Varcode {
 
-constexpr unsigned blockSize = 128;
+constexpr unsigned char blockSize = 128;
 
 template<typename T>
 std::vector<unsigned char> encodeNumber(T element) 
@@ -46,24 +46,26 @@ std::vector<unsigned char> encode(const std::vector<T>& elements)
 
 
 template<typename T>
-std::vector<T> decode(const std::vector<unsigned char>& byteStream)
+std::vector<T> decode(const unsigned char* byteStream, std::size_t size)
 {
 
 	std::vector<T> elements;
 	T element = 0;
-	for(auto& byte : byteStream) {
+	while(byteStream < byteStream + size) {
 
-		if(byte < blockSize) {
+		if(*byteStream < blockSize) {
 
-			element = blockSize * element + byte;
+			element = blockSize * element + *byteStream;
 
 		} else {
 
-			element = blockSize * element + (byte - blockSize);
+			element = blockSize * element + (*byteStream - blockSize);
 			elements.push_back(element);
 			element = 0;
 
 		}	
+		++byteStream;
+
 	}
 
 	return elements;
@@ -108,10 +110,10 @@ std::vector<unsigned char> compress(std::vector<T>& elements)
 }
 
 template<typename T>
-std::vector<T> decompress(const std::vector<unsigned char>& byteStream) 
+std::vector<T> decompress(const unsigned char* byteStream, std::size_t size) 
 {
 
-	auto elements = decode<T>(byteStream);
+	auto elements = decode<T>(byteStream, size);
 	restoreDifference(std::begin(elements), std::end(elements), 1);
 	
 	return elements;
