@@ -2,6 +2,7 @@
 #include "sorter.h"
 #include <iostream>
 #include <algorithm>
+#include <varcode.h>
 
 namespace OutputHandler {
 
@@ -30,6 +31,7 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 	size_t coordBlockOffsetBegin = 0;
 	size_t coordBlockOffsetLength= 0;
 	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
+	std::vector<typename Input::DocId> unpackedCoordFile;
 
 	for(auto raw = input.begin(); raw != input.end(); ++raw) {
 
@@ -39,16 +41,20 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 			auto docId = std::get<Input::Traits::DocId>(*raw);
 			auto position = std::get<Input::Traits::Position>(*raw);
 
+			unpackedCoordFile.insert(std::end(unpackedCoordFile), {docId, position});
 			++coordBlockOffsetLength; 
-
-			coordFile.insert(coordFile.end(), {docId, position});
 		
 		} else {
 
 			dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, coordBlockOffsetLength});
+			
+			auto wrappedBytes = Varcode::compress(unpackedCoordFile); 
+			coordFile.insert(std::end(coordFile), std::begin(wrappedBytes), std::end(wrappedBytes));
+			
 			currentHash = nextHash;
-			coordBlockOffsetBegin = sizeof(size_t) * coordFile.size();
+			coordBlockOffsetBegin = sizeof(unsigned char) * coordFile.size();
 			coordBlockOffsetLength = 0;
+			unpackedCoordFile.resize(0);
 			--raw;
 		}
 	}

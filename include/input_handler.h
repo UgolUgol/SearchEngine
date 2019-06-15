@@ -5,12 +5,6 @@
 
 namespace InputHandler {
 
-using HashType = size_t;
-using DocId = size_t;
-using Name = std::wstring;
-using URL = std::wstring;
-using PositionType = size_t;
-
 template<typename OutputType>
 struct TypeTraits {};
 
@@ -27,6 +21,13 @@ struct TypeTraits<std::vector<T>> {
 
 
 struct Output {
+
+	using HashType = size_t;
+	using DocId = size_t;
+	using Name = std::wstring;
+	using URL = std::wstring;
+	using PositionType = size_t;
+
 	std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>> data;
 	using Traits = TypeTraits<std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>>;
 
@@ -46,7 +47,7 @@ struct Output {
 };
 
 class StandartHandler {
-	static DocId docId;
+	static Output::DocId docId;
 public:
 	using OutputType = Output;
 	template<typename Input> OutputType prepareForSort(Input&&);

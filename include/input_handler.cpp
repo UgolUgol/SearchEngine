@@ -5,14 +5,14 @@
 #include <iostream>
 namespace InputHandler {
 
-DocId StandartHandler::docId = 1;
+Output::DocId StandartHandler::docId = 1;
 
 template<typename Input>
 StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 
 	OutputType output;
 
-	PositionType position = 1;
+	OutputType::PositionType position = 1;
 	std::vector<typename Input::Traits::TokensType> tokens;
 	typename Input::Traits::NameType articleName = std::move(std::get<Input::Traits::Name>(input.data));
 	typename Input::Traits::UrlType url = std::move(std::get<Input::Traits::Url>(input.data));

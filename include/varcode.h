@@ -44,6 +44,31 @@ std::vector<unsigned char> encode(const std::vector<T>& elements)
 	return byteStream;
 }
 
+
+template<typename Iterator>
+void findDifference(Iterator begin, Iterator end, std::size_t step)
+{
+	
+	size_t accumulateCount = 0;
+	for(auto current = begin + step + 1; current < end; std::advance(current, step + 1)) {
+
+		*current -= (*begin + accumulateCount);
+		accumulateCount += *current;
+
+	}
+
+
+}
+
+template<typename T>
+std::vector<unsigned char> compress(std::vector<T>& elements)
+{
+
+	findDifference(std::begin(elements), std::end(elements), 1);
+	return encode(elements);
+
+}
+
 template<typename T>
 std::vector<T> decode(const std::vector<unsigned char>& byteStream)
 {

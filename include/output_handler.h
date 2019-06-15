@@ -36,8 +36,8 @@ struct Output {
 
 	};
 
-	std::tuple<std::vector<size_t>, std::vector<size_t>, InvCoordFile> data;
-	using Traits = TypeTraits<std::tuple<std::vector<size_t>, std::vector<size_t>, InvCoordFile>>;
+	std::tuple<std::vector<size_t>, std::vector<unsigned char>, InvCoordFile> data;
+	using Traits = TypeTraits<std::tuple<std::vector<size_t>, std::vector<unsigned char>, InvCoordFile>>;
 };
 
 class StandartHandler {
@@ -52,6 +52,7 @@ private:
 	template<typename Input> void prepareIndex(Input& input, Output& output);
 	template<typename Input> void prepareInvCoordFile(Input& input, Output& output);
 };
+
 	
 }
 
