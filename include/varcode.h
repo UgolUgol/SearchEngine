@@ -15,7 +15,7 @@ std::vector<unsigned char> encodeNumber(T element)
 	std::vector<unsigned char> bytes;
 	while(true) {
 
-		bytes.push_back(element % blockSize);
+		bytes.insert(std::begin(bytes), element % blockSize);
 		if(element < blockSize) {
 			
 			break;
@@ -45,30 +45,6 @@ std::vector<unsigned char> encode(const std::vector<T>& elements)
 }
 
 
-template<typename Iterator>
-void findDifference(Iterator begin, Iterator end, std::size_t step)
-{
-	
-	size_t accumulateCount = 0;
-	for(auto current = begin + step + 1; current < end; std::advance(current, step + 1)) {
-
-		*current -= (*begin + accumulateCount);
-		accumulateCount += *current;
-
-	}
-
-
-}
-
-template<typename T>
-std::vector<unsigned char> compress(std::vector<T>& elements)
-{
-
-	findDifference(std::begin(elements), std::end(elements), 1);
-	return encode(elements);
-
-}
-
 template<typename T>
 std::vector<T> decode(const std::vector<unsigned char>& byteStream)
 {
@@ -91,6 +67,55 @@ std::vector<T> decode(const std::vector<unsigned char>& byteStream)
 	}
 
 	return elements;
+}
+
+
+template<typename Iterator>
+void findDifference(Iterator begin, Iterator end, std::size_t step)
+{
+	
+	size_t accumulateCount = 0;
+	for(auto current = begin + step + 1; current < end; std::advance(current, step + 1)) {
+
+		*current -= (*begin + accumulateCount);
+		accumulateCount += *current;
+
+	}
+
+
+}
+
+template<typename Iterator>
+void restoreDifference(Iterator begin, Iterator end, std::size_t step)
+{
+	size_t accumulateCount = 0;
+	for(auto current = begin + step + 1; current < end; std::advance(current, step + 1)) {
+
+		accumulateCount += *current;
+		*current = (*begin + accumulateCount);
+
+	}	
+
+}
+
+template<typename T>
+std::vector<unsigned char> compress(std::vector<T>& elements)
+{
+
+	findDifference(std::begin(elements), std::end(elements), 1);
+	return encode(elements);
+
+}
+
+template<typename T>
+std::vector<T> decompress(const std::vector<unsigned char>& byteStream) 
+{
+
+	auto elements = decode<T>(byteStream);
+	restoreDifference(std::begin(elements), std::end(elements), 1);
+	
+	return elements;
+
 }
 
 }
