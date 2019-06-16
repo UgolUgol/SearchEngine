@@ -10,7 +10,7 @@ class IndexIterator {
 public:
 	using iterator_category = std::random_access_iterator_tag;
 	using value_type = NodeType;
-	using difference_type = size_t;
+	using difference_type = std::ptrdiff_t;
 	using pointer = NodeType*;
 	using reference = NodeType&;
 

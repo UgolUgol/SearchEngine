@@ -115,7 +115,7 @@ Leaf::Leaf(std::size_t hash,
 
 		auto coordBlock = coordinatFile.begin<CompressedCoordBlock>() + *offset;
 		docIds = Varcode::decompress<std::size_t>(coordBlock.getUnderlyingPointer(), *length);
-		
+
 		currentEntry = DocIdIterator(reinterpret_cast<void*>(docIds.data()));
 		coordBlockEnd = DocIdIterator(reinterpret_cast<void*>(docIds.data() + docIds.size()));
 
@@ -404,7 +404,7 @@ boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 	
 	}
 
-	if(!currentEntry || *currentEntry == coordBlockEnd) {
+	if(!currentEntry || std::distance(*currentEntry, coordBlockEnd) <= 0) {
 
 		currentEntry = boost::none;
 		return currentEntry;
