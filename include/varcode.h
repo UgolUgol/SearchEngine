@@ -51,7 +51,9 @@ std::vector<T> decode(const unsigned char* byteStream, std::size_t size)
 
 	std::vector<T> elements;
 	T element = 0;
-	while(byteStream < byteStream + size) {
+	
+	auto begin = byteStream;
+	while(byteStream < begin + size) {
 
 		if(*byteStream < blockSize) {
 
