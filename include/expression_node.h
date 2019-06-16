@@ -5,8 +5,8 @@
 #include <boost/optional.hpp>
 #include "index.h"
 
-using DocIdIterator = Index<DefaultIndex>::DocIdIterator;
-using PositionIterator = Index<DefaultIndex>::PositionIterator;
+using DocIdIterator = CoordinateIndex<DefaultIndex>::DocIdIterator;
+//using PositionIterator = Index<DefaultIndex>::PositionIterator;
 
 
 class NotIteratorAdaptor {
@@ -93,17 +93,14 @@ struct QuoteBlock {
 class OperatorQuote : public ExpressionNode {
 public:
 
-	OperatorQuote(std::size_t limit, const Index<DefaultIndex>& index);
+	OperatorQuote(std::size_t limit);
 	OperatorQuote(const OperatorQuote& node);
 
 	boost::optional<DocIdIterator> next(bool initialization=false) override;
 	void quoteContinue() const;
 
 private:
-	DocIdIterator docIdBegin;
-	PositionIterator positionBegin;
 	mutable bool quoteBegin; 
-
 	std::shared_ptr<QuoteBlock> quoteBlock;
 
 	void resetLowerBound();
@@ -112,12 +109,15 @@ private:
 
 class Leaf : public ExpressionNode {
 public:
-	Leaf(std::size_t hash, const Index<DefaultIndex>& index);
+	Leaf(std::size_t hash,
+	 	 const DictionaryIndex<DefaultIndex>& dictionary,
+	 	 const CoordinateIndex<DefaultIndex>& coordinatFile);
+	
 	boost::optional<DocIdIterator> next(bool initialization=false) override;
 private:
-	size_t offset;
-	size_t length;
-	size_t position;
+	DocIdIterator coordBlockEnd;
+	std::vector<size_t> docIds;
+
 };
 
 

@@ -49,6 +49,8 @@ public:
 	}
 
 	RawMemory rawPointer() const { return ptr; };
+	pointer getUnderlyingPointer() const { return reinterpret_cast<pointer>(ptr); }
+
 private:
 	RawMemory ptr;
 };

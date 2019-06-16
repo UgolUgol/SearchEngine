@@ -52,6 +52,12 @@ struct IndexTraits<DefaultIndex> {
 		};
 	};
 
+	struct CompressedCoordinateFile {
+		using Type = unsigned char;
+		static constexpr size_t Offset = 0;
+		static constexpr size_t NodeSize = sizeof(unsigned char); 
+	};
+
 	struct DirectIndex {
 
 		struct DocId {
@@ -91,72 +97,99 @@ struct SearchResultBlock {
 	std::wstring url;
 };
 
-template<typename IndexType = DefaultIndex>
+
+template<typename IndexType> 
 class Index {
+public:
+
+	Index() = default;
+	Index(const Index&) = delete;
+	Index(Index&&) = default;
+
+	Index& operator=(const Index&) = delete;
+	Index& operator=(Index&&) = default;
+
+	template<typename IteratorType> auto begin(void* address) const {
+
+		auto begin = static_cast<size_t*>(address) + IteratorType::Offset;
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
+
+	}
+
+	template<typename IteratorType> auto end(void* address, size_t size) const {
+
+		auto offset = sizeof(typename IteratorType::Type) * IteratorType::Offset;
+		auto end = reinterpret_cast<RawMemory>(address) + offset + size;
+
+		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(end));
+	}
+};
+
+
+template<typename IndexType = DefaultIndex>
+class DictionaryIndex : public Index<IndexType> {
 public:
 	using DictionaryTraits = typename IndexTraits<IndexType>::Dictionary;
 	using Hash = typename DictionaryTraits::Hash;
 	using OffsetInfo = typename DictionaryTraits::OffsetInfo;
 	using LengthInfo = typename DictionaryTraits::LengthInfo;
 
-
-	using CoordinateFileTraits = typename IndexTraits<IndexType>::CoordinateFile;
-	using DocId = typename CoordinateFileTraits::DocId;
-	using Position = typename CoordinateFileTraits::Position;
-
 	using HashIterator = IndexIterator<typename Hash::Type, Hash::NodeSize>;
 	using OffsetIterator = IndexIterator<typename OffsetInfo::Type, OffsetInfo::NodeSize>;
 	using LengthIterator = IndexIterator<typename LengthInfo::Type, LengthInfo::NodeSize>;
-	using DocIdIterator = IndexIterator<typename DocId::Type, DocId::NodeSize>;
-	using PositionIterator = IndexIterator<typename Position::Type, Position::NodeSize>;
 
-	Index() = delete;
-	Index(const Index&) = delete;
-	Index(Index&&) = default;
-	Index(const char*, const char*);
+	DictionaryIndex(const char*);
 
-	Index& operator=(const Index&) = delete;
-	Index& operator=(Index&&) = default;
+	template<typename IteratorType> auto begin() const {
 
-	template<typename IteratorType> auto dictionaryBegin() const {
-
-		auto begin = static_cast<size_t*>(mappedDict.get_address()) + IteratorType::Offset;
-		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
+		return Index<IndexType>::template begin<IteratorType>(mappedDict.get_address());
 
 	}
 
-	template<typename IteratorType> auto dictionaryEnd() const {
+	template<typename IteratorType> auto end() const {
 
-		auto offset = sizeof(typename IteratorType::Type) * IteratorType::Offset;
-		auto end = reinterpret_cast<RawMemory>(mappedDict.get_address()) + offset + mappedDict.get_size();
-
-		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(end));
-	
-	}
-
-	template<typename IteratorType> auto coordBegin() const {
-
-		auto begin = static_cast<size_t*>(mappedCoord.get_address()) + IteratorType::Offset;
-		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(begin));
+		return Index<IndexType>::template end<IteratorType>(mappedDict.get_address(), mappedDict.get_size());
 
 	}
-
-	template<typename IteratorType> auto coordEnd() const {
-
-		auto offset = sizeof(typename IteratorType::Type) * IteratorType::Offset;
-		auto end = reinterpret_cast<RawMemory>(mappedCoord.get_address()) + offset + mappedCoord.get_size();
-
-		return IndexIterator<typename IteratorType::Type, IteratorType::NodeSize>(static_cast<void*>(end));
-	}
-
-	typename OffsetInfo::Type getOffset(HashIterator iterator) const;
-	typename LengthInfo::Type getLength(HashIterator iterator) const;
 
 private:
-	boost::interprocess::file_mapping dict, coord;
-	boost::interprocess::mapped_region mappedDict, mappedCoord;
+	boost::interprocess::file_mapping dict;
+	boost::interprocess::mapped_region mappedDict;
+
 };
 
+template<typename IndexType = DefaultIndex>
+class CoordinateIndex : public Index<IndexType> {
+public:
+	using CoordinateFileTraits = typename IndexTraits<IndexType>::CoordinateFile;
+	using CompressedCoordinateFile = typename IndexTraits<IndexType>::CompressedCoordinateFile;
+	
+	using DocId = typename CoordinateFileTraits::DocId;
+	using Position = typename CoordinateFileTraits::Position;
+
+	using DocIdIterator = IndexIterator<typename DocId::Type, DocId::NodeSize>;
+	using PositionIterator = IndexIterator<typename Position::Type, Position::NodeSize>;
+	using BytesIterator = IndexIterator<typename CompressedCoordinateFile::Type, CompressedCoordinateFile::NodeSize>;
+
+	CoordinateIndex(const char*);
+
+	template<typename IteratorType> auto begin() const {
+
+		return Index<IndexType>::template begin<IteratorType>(mappedCoord.get_address());
+
+	}
+
+	template<typename IteratorType> auto end(void* address, size_t size) const {
+
+		return Index<IndexType>::template end<IteratorType>(mappedCoord.get_address(), mappedCoord.get_size());
+
+	}
+
+private:
+	boost::interprocess::file_mapping coord;
+	boost::interprocess::mapped_region mappedCoord;
+
+};
 
 template<typename IndexType=DefaultIndex>
 class DirectIndex {
@@ -207,6 +240,37 @@ private:
 
 
 namespace algorithms {
+
+
+		template<typename From, typename To> IndexIterator<typename To::Type, To::NodeSize> 
+		convertIterator(IndexIterator<typename From::Type, From::NodeSize> iterator)
+		{	
+			using OutputIterator = IndexIterator<typename To::Type, To::NodeSize>;
+
+			constexpr auto sameTypes = std::is_same_v<typename From::Type, typename To::Type>;
+			if constexpr (sameTypes) {
+				
+				auto address = iterator.rawPointer();
+				bool forwardDirection = (From::Offset < To::Offset) ? true : false;
+				if(forwardDirection) {
+
+					auto realOffset = To::Offset - From::Offset;
+					return OutputIterator(address + realOffset * sizeof(To::NodeSize));
+
+				} else {
+
+					auto realOffset = From::Offset - To::Offset;
+					return OutputIterator(address - realOffset * sizeof(To::NodeSize));
+
+				}
+				
+			} else {
+
+				static_assert(sameTypes, "convertIterator supports only one-node-typed iterators");
+
+			}
+		}
+
 
 		template<typename InputIterator> 
 		InputIterator findInIndex(InputIterator begin, InputIterator end, const typename InputIterator::value_type& value) {

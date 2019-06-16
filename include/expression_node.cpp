@@ -1,4 +1,5 @@
 #include "expression_node.h"
+#include "varcode.h"
 
 NotIteratorAdaptor::NotIteratorAdaptor(size_t _length) : length(_length){
 
@@ -82,14 +83,9 @@ OperatorOr::OperatorOr() : ExpressionNode() { }
 
 OperatorNot::OperatorNot() : ExpressionNode(), maxDocId(14923), specialCurrentEntry(maxDocId) { }
 
-OperatorQuote::OperatorQuote(size_t limit, const Index<DefaultIndex>& index) {
-
-	using DocIdType = typename Index<DefaultIndex>::DocId;
-	using PositionType = typename Index<DefaultIndex>::Position;
+OperatorQuote::OperatorQuote(size_t limit) {
 
 	quoteBlock = std::make_shared<QuoteBlock>(limit);
-	docIdBegin = index.coordBegin<DocIdType>();
-	positionBegin = index.coordBegin<PositionType>();
 	quoteBegin = true;
 
 }
@@ -98,27 +94,33 @@ OperatorQuote::OperatorQuote(const OperatorQuote& node) {
 
 	quoteBegin = node.quoteBegin;
 	quoteBlock = node.quoteBlock;
-	positionBegin = node.positionBegin;
-	docIdBegin = node.docIdBegin;
 
 }
 
-Leaf::Leaf(size_t hash, const Index<DefaultIndex>& index) : ExpressionNode() {
+Leaf::Leaf(std::size_t hash,
+	 	   const DictionaryIndex<DefaultIndex>& dictionary,
+	 	   const CoordinateIndex<DefaultIndex>& coordinatFile) : ExpressionNode() {
 
-	using HashType = typename Index<DefaultIndex>::Hash;
-	using DocIdType = typename Index<DefaultIndex>::DocId;
+	using HashType = typename DictionaryIndex<DefaultIndex>::Hash;
+	using OffsetType = typename DictionaryIndex<DefaultIndex>::OffsetInfo;
+	using LengthType = typename DictionaryIndex<DefaultIndex>::LengthInfo;
+	using CompressedCoordBlock = typename CoordinateIndex<DefaultIndex>::CompressedCoordinateFile;
 
-	auto hashBlock = algorithms::findInIndex(index.dictionaryBegin<HashType>(), index.dictionaryEnd<HashType>(), hash);
-	if(hashBlock != index.dictionaryEnd<HashType>()) {
+	auto hashBlock = algorithms::findInIndex(dictionary.begin<HashType>(), dictionary.end<HashType>(), hash);
 
-		offset = index.getOffset(hashBlock);
-		length = index.getLength(hashBlock);
-		position = 1;
-		currentEntry = index.coordBegin<DocIdType>() + offset;
+	if(hashBlock != dictionary.end<HashType>()) {
+
+		auto offset = algorithms::convertIterator<HashType, OffsetType>(hashBlock);
+		auto length = algorithms::convertIterator<HashType, LengthType>(hashBlock);
+
+		auto coordBlock = coordinatFile.begin<CompressedCoordBlock>() + *offset;
+		docIds = Varcode::decompress<std::size_t>(coordBlock.getUnderlyingPointer(), *length);
+		
+		currentEntry = DocIdIterator(reinterpret_cast<void*>(docIds.data()));
+		coordBlockEnd = DocIdIterator(reinterpret_cast<void*>(docIds.data() + docIds.size()));
 
 	} else {
 
-		offset = length = position = 0;
 		currentEntry = boost::none;
 
 	}
@@ -324,6 +326,9 @@ void OperatorQuote::resetLowerBound() {
 
 boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
+	using DocIdType = typename CoordinateIndex<DefaultIndex>::DocId;
+	using PositionType = typename CoordinateIndex<DefaultIndex>::Position;
+
 	if(!currentEntry && !initializate) {
 		
 		return boost::none;
@@ -340,11 +345,9 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 		if(algorithms::equal(*leftDocId, *rightDocId)) {
 
-			auto leftOffset = std::distance(docIdBegin, *leftDocId);
-			auto rightOffset = std::distance(docIdBegin, *rightDocId);
+			auto leftPosition = algorithms::convertIterator<DocIdType, PositionType>(*leftDocId);
+			auto rightPosition = algorithms::convertIterator<DocIdType, PositionType>(*rightDocId);
 
-			auto leftPosition = positionBegin + leftOffset;
-			auto rightPosition = positionBegin + rightOffset;
 			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
 		
 			if(currentDifference == 0 || currentDifference <= quoteBlock->lowerBound) {
@@ -394,15 +397,20 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 }
 
 boost::optional<DocIdIterator> Leaf::next(bool initializate) {
+
+	if(!currentEntry) {
+
+		return boost::none;
 	
-	if(position == length) {
+	}
+
+	if(!currentEntry || *currentEntry == coordBlockEnd) {
 
 		currentEntry = boost::none;
 		return currentEntry;
 
 	}
 
-	++position;
 	++(*currentEntry);
 	return currentEntry;
 }

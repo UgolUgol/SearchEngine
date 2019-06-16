@@ -17,7 +17,9 @@ public:
 	std::set<size_t> extractResults();
 
 private:
-	Index<DefaultIndex> index;
+	DictionaryIndex<DefaultIndex> dictionary;
+	CoordinateIndex<DefaultIndex> coordinateFile;
+
 	std::unique_ptr<ExpressionNode> root;
 
 	template<typename T> auto makeInverseExpression(T&& expression);
@@ -26,7 +28,7 @@ private:
 	std::unique_ptr<ExpressionNode> makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuote& quote);
 };
 
-SearchTree::SearchTree() : index("../index/files/dict.bin", "../index/files/coord.bin") {
+SearchTree::SearchTree() : dictionary("../index/files/dict.bin"), coordinateFile("../index/files/coord.bin") {
 
 }
 
@@ -81,13 +83,13 @@ std::unique_ptr<ExpressionNode> SearchTree::makeTreeFromExpression(std::stack<Ex
 	} else if(nodeType == details::OperatorType::_quoteLimit) {
 
 		auto distanceLimit = nodeProperty;
-		OperatorQuote quote(distanceLimit, index);
+		OperatorQuote quote(distanceLimit);
 		node = makeQuote(expression, quote);
 
 	} else if(nodeType == details::OperatorType::_operand) {
 
 		auto hash = nodeProperty;
-		node = std::make_unique<Leaf>(hash, index);
+		node = std::make_unique<Leaf>(hash, dictionary, coordinateFile);
 		node->left = nullptr;
 		node->right = nullptr;
 
@@ -116,7 +118,7 @@ SearchTree::makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuot
 	} else if(nodeType == details::OperatorType::_operand) {
 
 		auto hash = nodeProperty;
-		node = std::make_unique<Leaf>(hash, index);
+		node = std::make_unique<Leaf>(hash, dictionary, coordinateFile);
 		node->left = nullptr;
 		node->right = nullptr;
 
