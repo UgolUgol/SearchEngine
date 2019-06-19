@@ -85,9 +85,19 @@ private:
 };
 
 struct QuoteBlock {
-	size_t lowerBound;
-	size_t upperBound;
-	QuoteBlock(size_t _upperBound) : lowerBound(0), upperBound(_upperBound) { }
+private:
+	std::stack<size_t> _lowerBounds;
+	size_t _upperBound;
+
+public:	
+	QuoteBlock(size_t _upperBound) : _upperBound(_upperBound) { }
+
+	size_t lowerBound() const { return _lowerBounds.empty() ? 0 : _lowerBounds.top(); }
+	size_t upperBound() const { return _upperBound; }
+
+	void addDifference(size_t);
+	void removeLastDifference(); 
+	void reset();
 };
 
 class OperatorQuote : public ExpressionNode {

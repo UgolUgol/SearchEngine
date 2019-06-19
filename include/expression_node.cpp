@@ -319,9 +319,27 @@ void OperatorQuote::quoteContinue() const {
 
 }
 
-void OperatorQuote::resetLowerBound() {
 
-	quoteBlock->lowerBound = 0;
+void QuoteBlock::addDifference(size_t difference)
+{
+	_lowerBounds.push(difference);
+}
+void QuoteBlock::removeLastDifference()
+{
+	if(!_lowerBounds.empty()) {
+
+		_lowerBounds.pop();
+
+	}
+
+}
+void QuoteBlock::reset() {
+
+	while(!_lowerBounds.empty()) {
+
+		_lowerBounds.pop();
+
+	}
 
 }
 
@@ -338,8 +356,7 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 	auto leftDocId = left->current();
 	auto rightDocId = right->current();
-	auto previousDifference = quoteBlock->lowerBound;
-	auto upperBound = quoteBlock->upperBound;
+	auto upperBound = quoteBlock->upperBound();
 
 	bool found = false;
 	while(leftDocId && rightDocId && !found) {
@@ -351,18 +368,18 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
 		
-			if(currentDifference == 0 || currentDifference <= quoteBlock->lowerBound) {
+			if(currentDifference == 0 || currentDifference <= quoteBlock->lowerBound()) {
 
-				resetLowerBound();
+				quoteBlock->removeLastDifference();
 				leftDocId = left->next();
 
 			} else if(currentDifference > upperBound) {
 
 				rightDocId = right->next();
 
-			} else if( currentDifference > quoteBlock->lowerBound && currentDifference <= upperBound) {
+			} else if( currentDifference > quoteBlock->lowerBound() && currentDifference <= upperBound) {
 
-				quoteBlock->lowerBound = currentDifference;
+				quoteBlock->addDifference(currentDifference);
 				currentEntry = leftDocId;
 				right->next();
 				found = true;
@@ -373,7 +390,7 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 			if(algorithms::less(*leftDocId, *rightDocId)) {
 
-				resetLowerBound();
+				quoteBlock->removeLastDifference();
 				leftDocId = left->next();
 
 			} else {
@@ -386,8 +403,8 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 	if(found && quoteBegin) {
 
-		resetLowerBound();
-		
+		quoteBlock->reset();
+
 	} else if(!found) {
 
 		currentEntry = boost::none;
