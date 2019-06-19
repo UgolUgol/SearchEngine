@@ -53,6 +53,7 @@ std::set<size_t> SearchTree::extractResults() {
 
 	}
 
+
 	return docIds;
 }
 

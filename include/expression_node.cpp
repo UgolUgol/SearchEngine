@@ -119,6 +119,7 @@ Leaf::Leaf(std::size_t hash,
 		currentEntry = DocIdIterator(reinterpret_cast<void*>(docIds.data()));
 		coordBlockEnd = DocIdIterator(reinterpret_cast<void*>(docIds.data() + docIds.size()));
 
+
 	} else {
 
 		currentEntry = boost::none;
@@ -404,13 +405,12 @@ boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 	
 	}
 
-	if(!currentEntry || std::distance(*currentEntry, coordBlockEnd) <= 0) {
+	++(*currentEntry);
+	if(std::distance(*currentEntry, coordBlockEnd) <= 0) {
 
 		currentEntry = boost::none;
-		return currentEntry;
 
 	}
 
-	++(*currentEntry);
 	return currentEntry;
 }
