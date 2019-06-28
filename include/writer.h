@@ -13,7 +13,7 @@ class StandartWriter {
 	std::ofstream coordOfs;
 	std::ofstream invCoordOfs;
 
-	std::string directory{"files/"};
+	std::string directory{"../index_files/"};
 public:
 	StandartWriter();
 	~StandartWriter();
