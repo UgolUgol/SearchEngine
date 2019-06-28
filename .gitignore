@@ -9,5 +9,4 @@ lib/*.so
 data.tar.gz
 tokens_data.tar.gz
 .idea/
-CMakeLists.txt
 cmake-build-debug/
