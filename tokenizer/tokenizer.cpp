@@ -16,7 +16,7 @@ const wchar_t* breakset = L"!#$%&()*+,./:;“„<=>?@[]^_{|}~»«\"\\—\n\t ";
 
 bool isArticle(const std::wstring& token) {
 
-	return token == L"the" || token == L"an";
+	return token == L"the" || token == L"an" || token == L"a";
 }
 
 
@@ -32,7 +32,7 @@ Tokens tokenize(const std::wstring& text, const size_t& endline) {
 	split_regex(tokens, text.c_str() + endline + 1, breakset, text.size() - endline - 1);
 
 	auto it = std::remove_if(tokens.begin(), tokens.end(), [](const auto& token){
-		return token.size() <= 1 || isArticle(token);
+		return isArticle(token);
 	});
 	tokens.erase(it, tokens.end());
 
