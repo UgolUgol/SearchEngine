@@ -28,7 +28,7 @@ private:
 	std::unique_ptr<ExpressionNode> makeQuote(std::stack<ExpressionPart>& expression, const OperatorQuote& quote);
 };
 
-SearchTree::SearchTree() : dictionary("../index/files/dict.bin"), coordinateFile("../index/files/coord.bin") {
+SearchTree::SearchTree() : dictionary("../index_files/dict.bin"), coordinateFile("../index_files/coord.bin") {
 
 }
 

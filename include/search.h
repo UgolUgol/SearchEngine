@@ -17,7 +17,7 @@ namespace Search {
 	};
 
 
-	RequestHandler::RequestHandler() : index("../index/files/invCoord.bin") { }
+	RequestHandler::RequestHandler() : index("../index_files/invCoord.bin") { }
 
 	template<typename T>
 	std::vector<SearchResultBlock> RequestHandler::search(T&& request) {
