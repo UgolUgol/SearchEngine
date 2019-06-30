@@ -22,6 +22,7 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 	for(auto& token : tokens) {
 		
 		if(token == L"@dummy") {
+			break;
 			position = 1;
 			continue;
 		}
