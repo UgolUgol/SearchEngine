@@ -33,7 +33,7 @@ if(Boost_FOUND)
             ${SEARCH_INCLUDEDIR}/output_handler.cpp
             ${SEARCH_INCLUDEDIR}/writer.cpp
             ${SEARCH_INCLUDEDIR}/index_maker.cpp)
-
+    set_target_properties(index_maker PROPERTIES COMPILE_FLAGS "-Wall -Werror -O2")
     target_link_libraries(index_maker tools)
 
     add_executable(tokenize tokenizer/tokenizer.cpp)
