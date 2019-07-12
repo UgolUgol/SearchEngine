@@ -4,13 +4,19 @@
 #include <set>
 #include <search_input_transformator.h>
 #include <chrono>
-
-
+#include <stemmer.h>
 
 int main() {
 
-	std::setlocale(LC_ALL, "ru_RU.utf8");
+    std::setlocale(LC_ALL, "ru_RU.utf8");
+    Stemmer<wchar_t> st(L"привет");
+
+
+
+
+/*
 	Search::RequestHandler req;
+	std::setlocale(LC_ALL, "ru_RU.utf8");
 	InputTransformator<std::wstring> t;
 
 	std::wstring s;
@@ -23,6 +29,7 @@ int main() {
 	}
 	std::wcout<<"Results for request: "<<transformedExpression<<std::endl;
 	std::wcout<<"Results count: "<<result.size()<<std::endl;
+*/
 
 	return 0;
 }

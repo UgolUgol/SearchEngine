@@ -38,7 +38,7 @@ if(Boost_FOUND)
 
     add_executable(tokenize tokenizer/tokenizer.cpp)
     add_executable(indexer index/make_index.cpp)
-    add_executable(search boolean_search/make_search.cpp include/index.cpp include/expression_node.cpp)
+    add_executable(search boolean_search/make_search.cpp include/index.cpp include/expression_node.cpp include/stemmer.cpp)
     target_link_libraries(tokenize Boost::regex pthread tools)
     target_link_libraries(indexer tools index_maker)
 

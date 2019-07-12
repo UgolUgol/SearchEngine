@@ -5,6 +5,7 @@
 
 using RawMemory = char*;
 
+
 template<typename NodeType, size_t NodeSize>
 class IndexIterator {
 public:
