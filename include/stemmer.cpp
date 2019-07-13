@@ -44,7 +44,7 @@ const std::vector<std::wstring_view>
 Morphology::Endings::noun ({
         L"иями", L"ями", L"ами", L"ией", L"иям", L"ием", L"иях", L"ев", L"ов", L"ие", L"ье", L"еи",
         L"ии", L"ей", L"ой", L"ий", L"ям", L"ем", L"ам", L"ом", L"ах", L"ам", L"ях", L"ию", L"ью", L"ия",
-        L"ья", L"е", L"и", L"о", L"й", L"у", L"ы", L"ь", L"ю", L"я"
+        L"ья", L"а", L"е", L"и", L"о", L"й", L"у", L"ы", L"ь", L"ю", L"я"
 });
 
 
@@ -112,6 +112,8 @@ std::basic_string_view<T> Stemmer<T>::normalize()
 
     firstStep();
     secondStep();
+    thirdStep();
+    fourthStep();
 
     return result;
 
@@ -213,7 +215,7 @@ void Stemmer<T>::secondStep()
 template<typename T>
 void Stemmer<T>::thirdStep()
 {
-
+    
     auto suffix = algorithms::findComparableSuffix(result.substr(R2), morph.endings.derivational);
     if(suffix != morph.endings.derivational.cend()) {
 
