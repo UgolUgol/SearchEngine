@@ -76,7 +76,7 @@ std::size_t Stemmer<T>::findRV(std::basic_string_view<T> word)
     };
 
     auto firstVowel = std::find_if(std::cbegin(word), std::cend(word), isVowel);
-    auto position = std::distance(std::cbegin(word), firstVowel);
+    std::size_t position = std::distance(std::cbegin(word), firstVowel);
 
     return position < word.length() ? position + 1 : word.length();
 }
@@ -98,7 +98,7 @@ std::size_t Stemmer<T>::findR(std::basic_string_view<T> word)
     auto firstVowelConsonant = std::adjacent_find(std::cbegin(word), std::cend(word), vowelConsonantFind);
 
 
-    auto position = std::distance(std::cbegin(word), firstVowelConsonant);
+    std::size_t position = std::distance(std::cbegin(word), firstVowelConsonant);
     return position < word.length() ? position + 2 :  word.length();
 
 }
@@ -119,6 +119,15 @@ std::basic_string_view<T> Stemmer<T>::normalize()
 
 }
 
+template<typename T>
+void Stemmer<T>::recalculatePositions()
+{
+
+    RV = std::min(RV, result.length());
+    R1 = std::min(R1, result.length());
+    R2 = std::min(R2, result.length());
+
+}
 
 template<typename T>
 void Stemmer<T>::firstStep()
@@ -128,6 +137,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.perfectiveGerund1.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length() - 1);
+        recalculatePositions();
         return;
 
     }
@@ -136,6 +146,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.perfectiveGerund2.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
         return;
 
     }
@@ -144,6 +155,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.reflexive.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
         return;
 
     }
@@ -152,11 +164,13 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.adjective.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
 
         auto partSuffix = algorithms::findComparableSuffix(result.substr(RV), morph.endings.participle1, {L'а', L'я'});
         if(partSuffix != morph.endings.participle1.cend()) {
 
             result = result.substr(0, result.length() - (*partSuffix).length());
+            recalculatePositions();
             return;
 
         }
@@ -165,6 +179,7 @@ void Stemmer<T>::firstStep()
         if(partSuffix != morph.endings.participle1.cend()) {
 
             result = result.substr(0, result.length() - (*partSuffix).length());
+            recalculatePositions();
             return;
 
         }
@@ -177,6 +192,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.verb1.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length() - 1);
+        recalculatePositions();
         return;
 
     }
@@ -185,6 +201,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.verb2.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
         return;
 
     }
@@ -193,6 +210,7 @@ void Stemmer<T>::firstStep()
     if(suffix != morph.endings.noun.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
         return;
 
     }
@@ -205,7 +223,8 @@ void Stemmer<T>::secondStep()
 
     if(algorithms::hasSuffix<T>(result.substr(RV), L"и")) {
 
-        result = result.substr(9, result.length() - 1);
+        result = result.substr(0, result.length() - 1);
+        recalculatePositions();
 
     }
 
@@ -215,11 +234,12 @@ void Stemmer<T>::secondStep()
 template<typename T>
 void Stemmer<T>::thirdStep()
 {
-    
+
     auto suffix = algorithms::findComparableSuffix(result.substr(R2), morph.endings.derivational);
     if(suffix != morph.endings.derivational.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
         return;
 
     }
@@ -235,12 +255,14 @@ void Stemmer<T>::fourthStep()
     if(suffix != morph.endings.superlative.cend()) {
 
         result = result.substr(0, result.length() - (*suffix).length());
+        recalculatePositions();
 
     }
 
     if(algorithms::hasSuffix<T>(result, L"нн")) {
 
         result = result.substr(0, result.length() - 1);
+        recalculatePositions();
         return;
 
     }
@@ -248,6 +270,7 @@ void Stemmer<T>::fourthStep()
     if(algorithms::hasSuffix<T>(result, L"ь")) {
 
         result = result.substr(0, result.length() - 1);
+        recalculatePositions();
         return;
 
     }

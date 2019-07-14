@@ -99,6 +99,7 @@ private:
     void secondStep();
     void thirdStep();
     void fourthStep();
+    void recalculatePositions();
 
 public:
 
