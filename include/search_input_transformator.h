@@ -4,6 +4,7 @@
 #include <vector>
 #include <regex>
 #include <list>
+#include <stemmer.h>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
@@ -60,43 +61,52 @@ namespace functions {
 	}
 }
 
+
+template<typename T> using StringType = std::basic_string<T>;
+template<typename T> using ListType = std::list<StringType<T>>;
+
+
 template<typename T> class InputTransformator { };
 
 template<typename T> 
-class InputTransformator<std::basic_string<T>> {
+class InputTransformator<StringType<T>> {
+
 public:
-	std::basic_string<T> transform(std::basic_string<T>& input);
+	StringType<T> transform(StringType<T>& input);
+
 private:
-	std::basic_string<T>&& correctUnspacedParts(std::basic_string<T>&& input);
-	std::list<std::basic_string<T>> splitInTokensList(std::basic_string<T>&& input);
-	std::list<std::basic_string<T>>&& quotesConversion(std::list<std::basic_string<T>>&& tokens);
-	std::basic_string<T> concatenateTokens(std::list<std::basic_string<T>>&& tokens);
+	StringType<T> correctUnspacedParts(StringType<T>&& input);
+	ListType<T> splitInTokensList(StringType<T>&& input);
+	ListType<T> morphologyConversion(ListType<T>&& tokens);
+	ListType<T> quotesConversion(ListType<T>&& tokens);
+	StringType<T> concatenateTokens(ListType<T>&& tokens);
 };
 
 
 template<typename T>
-std::basic_string<T> InputTransformator<std::basic_string<T>>::transform(std::basic_string<T>& input) {
+StringType<T> InputTransformator<StringType<T>>::transform(StringType<T>& input) {
 
-	return concatenateTokens(quotesConversion(splitInTokensList(correctUnspacedParts(std::move(input)))));
+	return concatenateTokens(quotesConversion(morphologyConversion(splitInTokensList(correctUnspacedParts(std::move(input))))));
 
 };
 
+
 template<typename T>
-std::basic_string<T>&& InputTransformator<std::basic_string<T>>
-::correctUnspacedParts(std::basic_string<T>&& input) {
+StringType<T> InputTransformator<StringType<T>>
+::correctUnspacedParts(StringType<T>&& input) {
 
 	std::basic_regex<T> binaryReg(details::TransformatorTraits<T>::binaryOperatorsRegex);	
 	input = std::regex_replace(input, binaryReg, details::TransformatorTraits<T>::binaryOperatorsRegexReplace);
-	
+
 	return std::move(input);
 }
 
 
 template<typename T>
-std::list<std::basic_string<T>> InputTransformator<std::basic_string<T>>
-::splitInTokensList(std::basic_string<T>&& input) {
-	
-	std::list<std::basic_string<T>> tokens;
+ListType<T> InputTransformator<StringType<T>>
+::splitInTokensList(StringType<T>&& input) {
+
+	ListType<T> tokens;
 	auto space = details::TransformatorTraits<T>::space;
 	auto isempty = [](const auto& token) { return token.empty(); };
 
@@ -110,8 +120,22 @@ std::list<std::basic_string<T>> InputTransformator<std::basic_string<T>>
 }
 
 template<typename T>
-std::list<std::basic_string<T>>&& InputTransformator<std::basic_string<T>>
-::quotesConversion(std::list<std::basic_string<T>>&& tokens) 
+ListType<T> InputTransformator<StringType<T>>::morphologyConversion(ListType<T> &&tokens)
+{
+
+    for(auto& token : tokens) {
+
+        Stemmer<T> st(token);
+        token = st.normalize();
+
+    }
+
+    return tokens;
+}
+
+template<typename T>
+ListType<T> InputTransformator<StringType<T>>
+::quotesConversion(ListType<T>&& tokens)
 {
 	auto quoteUnion = details::TransformatorTraits<T>::_quoteUnion;
 	auto backslash = details::TransformatorTraits<T>::_backslash;
@@ -152,8 +176,8 @@ std::list<std::basic_string<T>>&& InputTransformator<std::basic_string<T>>
 
 
 template<typename T>
-std::basic_string<T> InputTransformator<std::basic_string<T>>
-::concatenateTokens(std::list<std::basic_string<T>>&& tokens) {
+StringType<T> InputTransformator<StringType<T>>
+::concatenateTokens(ListType<T>&& tokens) {
 
 	auto space = details::TransformatorTraits<T>::space;
 	auto _and = details::TransformatorTraits<T>::_and;
