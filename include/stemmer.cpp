@@ -7,6 +7,13 @@ Morphology::vowels { L'а', L'е', L'и', L'о', L'у', L'ы', L'э', L'ю', L'�
 const std::vector<std::wstring_view>
 Morphology::Endings::perfectiveGerund1 ({L"вшись", L"вши", L"в"});
 
+const std::set<std::wstring_view, std::less<>>
+Morphology::Endings::perfectiveGerund11({
+                                                L"его", L"ого", L"ему", L"ому", L"ими", L"ыми", L"ее", L"ие",
+                                                L"ые", L"ое",  L"ей", L"ий", L"ый", L"ой", L"ем", L"им", L"ым", L"ом",
+                                                L"их", L"ых", L"ую", L"юю", L"ая", L"яя", L"ою", L"ею"
+                                        });
+
 const std::vector<std::wstring_view>
 Morphology::Endings::perfectiveGerund2 ({L"ившись", L"ывшись", L"ивши", L"ывши", L"ыв", L"ив"});
 

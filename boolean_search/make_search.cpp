@@ -6,17 +6,22 @@
 #include <chrono>
 #include <stemmer.h>
 
+
+
+
+
+
 int main() {
 
-    std::setlocale(LC_ALL, "ru_RU.utf8");
-    Stemmer<wchar_t> st(L"привет");
 
-
-
-
-/*
-	Search::RequestHandler req;
 	std::setlocale(LC_ALL, "ru_RU.utf8");
+    Morphology m;
+    const StringViewWrapper<wchar_t> ws(L"красный");
+
+    auto it = m.endings.perfectiveGerund11.find(ws);
+
+    std::wcout << *it<<std::endl;
+/*	Search::RequestHandler req;
 	InputTransformator<std::wstring> t;
 
 	std::wstring s;
@@ -28,8 +33,8 @@ int main() {
 		std::wcout<<block.name<<std::endl<<block.url<<std::endl<<std::endl;
 	}
 	std::wcout<<"Results for request: "<<transformedExpression<<std::endl;
-	std::wcout<<"Results count: "<<result.size()<<std::endl;
-*/
+	std::wcout<<"Results count: "<<result.size()<<std::endl;*/
 
 	return 0;
+
 }

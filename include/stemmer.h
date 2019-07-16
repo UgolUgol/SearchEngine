@@ -64,6 +64,7 @@ struct Morphology {
     struct Endings {
 
         static const std::vector<std::wstring_view> perfectiveGerund1;
+        static const std::set<std::wstring_view, std::less<>> perfectiveGerund11;
         static const std::vector<std::wstring_view> perfectiveGerund2;
         static const std::vector<std::wstring_view> adjective;
         static const std::vector<std::wstring_view> participle1;
@@ -78,6 +79,60 @@ struct Morphology {
     } endings;
 
 };
+
+
+
+template<typename T>
+class StringViewWrapper {
+private:
+    std::basic_string_view<T> word;
+public:
+
+    StringViewWrapper() = delete;
+    explicit StringViewWrapper(const std::basic_string_view<T>& word) : word(word) { }
+
+
+    friend bool operator<(const StringViewWrapper<T>& lhs, const std::basic_string_view<T> rhs)
+    {
+
+        if(lhs.word.length() <= rhs.length()) {
+
+            return lhs.word < rhs;
+
+        }
+
+        if(algorithms::hasSuffix(lhs.word, rhs))
+        {
+            return false;
+        }
+
+        return lhs.word.substr(lhs.word.length() - rhs.length()) < rhs;
+
+    }
+
+
+
+    friend bool operator<(const std::basic_string_view<T> lhs, const StringViewWrapper<T>& rhs)
+    {
+
+        if(lhs.length() <= rhs.word.length()) {
+
+            return lhs < rhs.word;
+
+        }
+
+        if(algorithms::hasSuffix(lhs, rhs.word))
+        {
+            return false;
+        }
+
+        return lhs < rhs.word.substr(rhs.word.length() - lhs.length());
+
+    }
+
+
+};
+
 
 
 template<typename T>
