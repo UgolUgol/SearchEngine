@@ -64,7 +64,6 @@ struct Morphology {
     struct Endings {
 
         static const std::vector<std::wstring_view> perfectiveGerund1;
-        static const std::set<std::wstring_view, std::less<>> perfectiveGerund11;
         static const std::vector<std::wstring_view> perfectiveGerund2;
         static const std::vector<std::wstring_view> adjective;
         static const std::vector<std::wstring_view> participle1;
@@ -91,6 +90,10 @@ public:
     StringViewWrapper() = delete;
     explicit StringViewWrapper(const std::basic_string_view<T>& word) : word(word) { }
 
+    operator std::basic_string_view<T>() const
+    {
+        return word;
+    }
 
     friend bool operator<(const StringViewWrapper<T>& lhs, const std::basic_string_view<T> rhs)
     {
@@ -101,7 +104,7 @@ public:
 
         }
 
-        if(algorithms::hasSuffix(lhs.word, rhs))
+        if(algorithms::hasSuffix<T>(lhs, rhs))
         {
             return false;
         }
@@ -121,7 +124,7 @@ public:
 
         }
 
-        if(algorithms::hasSuffix(lhs, rhs.word))
+        if(algorithms::hasSuffix<T>(lhs, rhs))
         {
             return false;
         }
