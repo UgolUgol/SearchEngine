@@ -42,14 +42,26 @@ struct IndexTraits<DefaultIndex> {
 		struct DocId {
 			using Type = size_t;
 			static constexpr size_t Offset = 0;
-			static constexpr size_t NodeSize = 2 * sizeof(size_t);
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
 
 		struct Position {
 			using Type = size_t;
 			static constexpr size_t Offset = 1;
-			static constexpr size_t NodeSize = 2 * sizeof(size_t);
+			static constexpr size_t NodeSize = 4 * sizeof(size_t);
 		};
+
+		struct Tf {
+		    using Type = size_t;
+		    static constexpr size_t Offset = 2;
+		    static constexpr size_t NodeSize = 4 * sizeof(size_t);
+		};
+
+        struct Df {
+            using Type = size_t;
+            static constexpr size_t Offset = 3;
+            static constexpr size_t NodeSize = 4 * sizeof(size_t);
+        };
 	};
 
 	struct CompressedCoordinateFile {
@@ -166,9 +178,13 @@ public:
 	
 	using DocId = typename CoordinateFileTraits::DocId;
 	using Position = typename CoordinateFileTraits::Position;
+	using TF = typename CoordinateFileTraits::Tf;
+	using DF = typename CoordinateFileTraits::Df;
 
 	using DocIdIterator = IndexIterator<typename DocId::Type, DocId::NodeSize>;
 	using PositionIterator = IndexIterator<typename Position::Type, Position::NodeSize>;
+	using TFIterator = IndexIterator<typename TF::Type, TF::NodeSize>;
+	using DFIterator = IndexIterator<typename DF::Type, DF::NodeSize>;
 	using BytesIterator = IndexIterator<typename CompressedCoordinateFile::Type, CompressedCoordinateFile::NodeSize>;
 
 	CoordinateIndex(const char*);

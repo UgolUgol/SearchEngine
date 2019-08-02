@@ -106,7 +106,7 @@ template<typename T>
 std::vector<unsigned char> compress(std::vector<T>& elements)
 {
 
-	findDifference(std::begin(elements), std::end(elements), 1);
+	findDifference(std::begin(elements), std::end(elements), 3);
 	return encode(elements);
 
 }
@@ -116,7 +116,7 @@ std::vector<T> decompress(const unsigned char* byteStream, std::size_t size)
 {
 
 	auto elements = decode<T>(byteStream, size);
-	restoreDifference(std::begin(elements), std::end(elements), 1);
+	restoreDifference(std::begin(elements), std::end(elements), 3);
 	
 	return elements;
 

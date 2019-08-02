@@ -35,11 +35,21 @@ struct Output {
 	operator std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>&&() && { return std::move(data); }
 
 	auto begin() {
-		return data.begin();
+		return std::begin(data);
 	}
+
 	auto end() {
-		return data.end();
+		return std::end(data);
 	}
+
+	auto begin() const {
+	    return std::cbegin(data);
+	}
+
+	auto end() const {
+	    return std::cend(data);
+	}
+
 
 	size_t size() {
 		return data.size();
