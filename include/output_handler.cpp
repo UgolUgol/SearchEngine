@@ -19,16 +19,22 @@ void RankingHandler<Input>::metricsCalculate(const Input &data)
         auto [tfNode, tfWasInserted] = tf.emplace(std::piecewise_construct,
                                                   std::forward_as_tuple(hash, docId),
                                                   std::forward_as_tuple(1));
+
+        if(tfWasInserted) {
+
+            auto [dfNode, dfWasInserted] = df.emplace(hash, 1);
+            if(!dfWasInserted) {
+
+                ++(dfNode->second);
+
+            }
+
+        }
+
         if(!tfWasInserted) {
 
             ++(tfNode->second);
 
-        }
-
-        auto [dfNode, dfWasInserted] = df.emplace(hash, 1);
-        if(!dfWasInserted) {
-
-            ++(dfNode->second);
         }
 
     }
