@@ -1,6 +1,8 @@
 #include "expression_node.h"
 #include "varcode.h"
 
+RankingMaster<typename DocIdIterator::value_type, StandartRanker> ExpressionNode::ranker;
+
 NotIteratorAdaptor::NotIteratorAdaptor(size_t _length) : length(_length){
 
 	docIds = new size_t[length];
@@ -107,6 +109,7 @@ Leaf::Leaf(std::size_t hash,
 	using CompressedCoordBlock = typename CoordinateIndex<DefaultIndex>::CompressedCoordinateFile;
 
 	auto hashBlock = algorithms::findInIndex(dictionary.begin<HashType>(), dictionary.end<HashType>(), hash);
+	terminHash = hash;
 
 	if(hashBlock != dictionary.end<HashType>()) {
 
@@ -118,6 +121,8 @@ Leaf::Leaf(std::size_t hash,
 
 		currentEntry = DocIdIterator(reinterpret_cast<void*>(docIds.data()));
 		coordBlockEnd = DocIdIterator(reinterpret_cast<void*>(docIds.data() + docIds.size()));
+
+		ranker.addTermin(terminHash);
 
 
 	} else {
@@ -416,6 +421,11 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 
+
+    using DocIdType = typename CoordinateIndex<DefaultIndex>::DocId;
+    using TFType = typename CoordinateIndex<DefaultIndex>::TF;
+    using DFType = typename CoordinateIndex<DefaultIndex>::DF;
+
 	if(!currentEntry) {
 
 		return boost::none;
@@ -427,6 +437,12 @@ boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 
 		currentEntry = boost::none;
 
+	} else {
+
+	    auto tf = algorithms::convertIterator<DocIdType, TFType>(*currentEntry);
+	    auto df = algorithms::convertIterator<DocIdType, DFType>(*currentEntry);
+
+	    ranker.updateTerminMetric(terminHash, *tf, *df);
 	}
 
 	return currentEntry;

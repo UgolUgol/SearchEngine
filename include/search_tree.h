@@ -14,7 +14,7 @@ public:
 	~SearchTree() = default;
 
 	template<typename T> void build(T&& expression);
-	std::set<size_t> extractResults();
+	std::vector<size_t> extractResults();
 
 private:
 	DictionaryIndex<DefaultIndex> dictionary;
@@ -41,18 +41,30 @@ void SearchTree::build(T&& expression) {
 
 }
 
-std::set<size_t> SearchTree::extractResults() {
-	
-	std::set<size_t> docIds;
+std::vector<size_t> SearchTree::extractResults() {
+
+
+    std::vector<std::pair<std::size_t, double>> searchResults;
 	auto currentDocId = root->current();
 	
 	while(currentDocId != boost::none) {
-		
-		docIds.insert(**currentDocId);
+
+        searchResults.emplace_back(**currentDocId, root->getRankMetric());
 		currentDocId = root->next();
+
 
 	}
 
+	auto it = std::unique(std::begin(searchResults), std::end(searchResults),
+	        [](const auto& lhs, const auto& rhs) { return lhs.first == rhs.first; });
+	searchResults.erase(it, std::end(searchResults));
+
+	std::sort(std::begin(searchResults), std::end(searchResults),
+	        [](const auto& lhs, const auto& rhs) { return lhs.second > rhs.second; });
+
+	std::vector<std::size_t> docIds(searchResults.size());
+	std::transform(std::begin(searchResults), std::end(searchResults), std::begin(docIds),
+	        [](const auto& node) { return node.first; });
 
 	return docIds;
 }

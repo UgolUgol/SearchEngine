@@ -3,9 +3,13 @@
 #include <stack>
 #include <memory>
 #include <boost/optional.hpp>
+#include <ranking.h>
+#include <cmath>
 #include "index.h"
 
 using DocIdIterator = CoordinateIndex<DefaultIndex>::DocIdIterator;
+using TFIterator = CoordinateIndex<DefaultIndex>::TFIterator;
+using DFIterator = CoordinateIndex<DefaultIndex>::DFIterator;
 //using PositionIterator = Index<DefaultIndex>::PositionIterator;
 
 
@@ -32,10 +36,21 @@ private:
 };
 
 
+struct StandartRanker {
+
+    static constexpr std::size_t DocumentsPackSize = 14923;
+    static double calculate(typename TFIterator::value_type tf, typename DFIterator::value_type df)
+    {
+        return  tf * log10(DocumentsPackSize / static_cast<double>(df + 1));
+
+    }
+};
 
 class ExpressionNode {
 public:
 	ExpressionNode();
+
+	double getRankMetric() const { return ranker.getMetrics(); }
 
 	void initializate();
 	virtual boost::optional<DocIdIterator> current();
@@ -45,11 +60,16 @@ public:
 	std::unique_ptr<ExpressionNode> left;
 	std::unique_ptr<ExpressionNode> right;
 
-protected:
-	boost::optional<DocIdIterator> currentEntry;
 private:
-	virtual void concreteInitializate();
+    virtual void concreteInitializate();
+
+protected:
+    boost::optional<DocIdIterator> currentEntry;
+	static RankingMaster<typename DocIdIterator::value_type, StandartRanker> ranker;
 };
+
+
+
 
 class OperatorAnd : public ExpressionNode {
 public:
@@ -125,6 +145,7 @@ public:
 	
 	boost::optional<DocIdIterator> next(bool initialization=false) override;
 private:
+    std::size_t terminHash;
 	DocIdIterator coordBlockEnd;
 	std::vector<size_t> docIds;
 
