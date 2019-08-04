@@ -1,7 +1,6 @@
 #include "expression_node.h"
 #include "varcode.h"
 
-RankingMaster<typename DocIdIterator::value_type, StandartRanker> ExpressionNode::ranker;
 
 NotIteratorAdaptor::NotIteratorAdaptor(size_t _length) : length(_length){
 
@@ -11,9 +10,7 @@ NotIteratorAdaptor::NotIteratorAdaptor(size_t _length) : length(_length){
 		docIds[idx] = idx;
 	} 
 
-
-	currentEntry = SpecialIterator(docIds);
-
+    currentEntry.emplace(SpecialIterator(docIds), 0.0);
 }
 
 NotIteratorAdaptor::~NotIteratorAdaptor() {
@@ -22,11 +19,11 @@ NotIteratorAdaptor::~NotIteratorAdaptor() {
 
 }
 
-NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<DocIdIterator>& iterator) {
+NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<NodeOutput<DocIdIterator>>& iterator) {
 
 	if(iterator) {
 
-		currentEntry = SpecialIterator((*iterator).rawPointer());
+		currentEntry.emplace(SpecialIterator((iterator->docId).rawPointer()), 0.0);
 
 	} else {
 
@@ -39,13 +36,13 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator=(const boost::optional<DocIdIte
 
 NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
 
-	if(!currentEntry || **currentEntry == length - 1) {
+	if(!currentEntry || *(currentEntry->docId) == length - 1) {
 
 		currentEntry = boost::none;
 
 	} else {
 
-		++(*currentEntry);
+		++(currentEntry->docId);
 	
 	}
 	return *this;
@@ -53,13 +50,13 @@ NotIteratorAdaptor& NotIteratorAdaptor::operator++() {
 }
 
 
-NotIteratorAdaptor::SpecialIterator& NotIteratorAdaptor::operator*() {
+NodeOutput<NotIteratorAdaptor::SpecialIterator>& NotIteratorAdaptor::operator*() {
 
 	return *currentEntry;
 
 }
 
-NotIteratorAdaptor::operator boost::optional<DocIdIterator>() {
+NotIteratorAdaptor::operator boost::optional<NodeOutput<DocIdIterator>>() {
 
 	if(!currentEntry) {
 
@@ -67,7 +64,7 @@ NotIteratorAdaptor::operator boost::optional<DocIdIterator>() {
 	
 	}
 
-	return DocIdIterator((*currentEntry).rawPointer());
+	return NodeOutput<DocIdIterator>(DocIdIterator(currentEntry->docId.rawPointer()), 0.0);
 
 }
 
@@ -109,7 +106,6 @@ Leaf::Leaf(std::size_t hash,
 	using CompressedCoordBlock = typename CoordinateIndex<DefaultIndex>::CompressedCoordinateFile;
 
 	auto hashBlock = algorithms::findInIndex(dictionary.begin<HashType>(), dictionary.end<HashType>(), hash);
-	terminHash = hash;
 
 	if(hashBlock != dictionary.end<HashType>()) {
 
@@ -119,10 +115,8 @@ Leaf::Leaf(std::size_t hash,
 		auto coordBlock = coordinatFile.begin<CompressedCoordBlock>() + *offset;
 		docIds = Varcode::decompress<std::size_t>(coordBlock.getUnderlyingPointer(), *length);
 
-		currentEntry = DocIdIterator(reinterpret_cast<void*>(docIds.data()));
+		currentEntry.emplace(DocIdIterator(reinterpret_cast<void*>(docIds.data())), 0.0);
 		coordBlockEnd = DocIdIterator(reinterpret_cast<void*>(docIds.data() + docIds.size()));
-
-		ranker.addTermin(terminHash);
 
 
 	} else {
@@ -146,7 +140,7 @@ void ExpressionNode::initializate() {
 
 void ExpressionNode::concreteInitializate() { }
 
-boost::optional<DocIdIterator> ExpressionNode::current() {
+boost::optional<NodeOutput<DocIdIterator>> ExpressionNode::current() {
 
 	return currentEntry;
 
@@ -158,7 +152,7 @@ void OperatorAnd::concreteInitializate() {
 
 }
 
-boost::optional<DocIdIterator> OperatorAnd::next(bool initializate) {
+boost::optional<NodeOutput<DocIdIterator>> OperatorAnd::next(bool initializate) {
 
 	if(!currentEntry && !initializate) {
 
@@ -166,29 +160,29 @@ boost::optional<DocIdIterator> OperatorAnd::next(bool initializate) {
 	
 	}
 
-	auto leftDocId = left->current();
-	auto rightDocId = right->current();
+	auto leftEntry = left->current();
+	auto rightEntry = right->current();
 
-	while(leftDocId && rightDocId && !algorithms::equal(*leftDocId, *rightDocId)) {
+	while(leftEntry && rightEntry && !algorithms::equal(leftEntry->docId, rightEntry->docId)) {
 		
-		if(algorithms::less(*leftDocId, *rightDocId)) {
+		if(algorithms::less(leftEntry->docId, rightEntry->docId)) {
 
-			leftDocId = left->next();
+			leftEntry = left->next();
 
 		} else {
 
-			rightDocId = right->next();
+			rightEntry = right->next();
 
 		}
 	}
 	
-	if(!leftDocId || !rightDocId) {
+	if(!leftEntry || !rightEntry) {
 
 		currentEntry = boost::none;
 
 	} else {
 
-		currentEntry = leftDocId;
+		currentEntry.emplace(leftEntry->docId, leftEntry->rankValue + rightEntry->rankValue);
 		left->next();
 		right->next();
 
@@ -203,43 +197,43 @@ void OperatorOr::concreteInitializate() {
 
 }
 
-boost::optional<DocIdIterator> OperatorOr::next(bool initializate) {
+boost::optional<NodeOutput<DocIdIterator>> OperatorOr::next(bool initializate) {
 	
 	if(currentEntry == boost::none && initializate == false) {
 		return boost::none;
 	}
 
-	auto leftDocId = left->current();
-	auto rightDocId = right->current();
+	auto leftEntry = left->current();
+	auto rightEntry = right->current();
 
-	if(leftDocId && rightDocId) {
+	if(leftEntry && rightEntry) {
 		
-		if(algorithms::less(*leftDocId, *rightDocId)) {
+		if(algorithms::less(leftEntry->docId, rightEntry->docId)) {
 
 				left->next();
-				currentEntry = leftDocId;
+				currentEntry = leftEntry;
 
-		} else if(algorithms::greater(*leftDocId, *rightDocId)) {
+		} else if(algorithms::greater(leftEntry->docId, rightEntry->docId)) {
 
 				right->next();
-				currentEntry = rightDocId;
+				currentEntry = rightEntry;
 
 		} else {
 			
 			left->next();
 			right->next();
-			currentEntry = leftDocId;
+			currentEntry.emplace(leftEntry->docId, leftEntry->rankValue + rightEntry->rankValue);
 
 		}
 
-	} else if(!leftDocId) {
+	} else if(!leftEntry) {
 		
-		currentEntry = rightDocId;
+		currentEntry = rightEntry;
 		right->next();
 
-	} else if(!rightDocId) {
+	} else if(!rightEntry) {
 		
-		currentEntry = leftDocId;
+		currentEntry = leftEntry;
 		left->next();
 
 	}
@@ -251,7 +245,7 @@ void OperatorNot::concreteInitializate() {
 
 	if(left->current()) {
 		
-		boundaryDocId = **left->current();
+		boundaryDocId = *(*left->current()).docId;
 		
 	} else {
 		
@@ -262,7 +256,7 @@ void OperatorNot::concreteInitializate() {
 }
 
 
-boost::optional<DocIdIterator> OperatorNot::current() {
+boost::optional<NodeOutput<DocIdIterator>> OperatorNot::current() {
 
 	if(!specialCurrentEntry) {
 
@@ -273,7 +267,7 @@ boost::optional<DocIdIterator> OperatorNot::current() {
 	return specialCurrentEntry;
 }
 
-boost::optional<DocIdIterator> OperatorNot::next(bool initializate) {
+boost::optional<NodeOutput<DocIdIterator>> OperatorNot::next(bool initializate) {
 
 
 	++specialCurrentEntry;
@@ -284,7 +278,7 @@ boost::optional<DocIdIterator> OperatorNot::next(bool initializate) {
 		
 	}
 
-	if(**specialCurrentEntry < boundaryDocId) {
+	if(*(*specialCurrentEntry).docId < boundaryDocId) {
 
 		return specialCurrentEntry;
 		
@@ -292,20 +286,20 @@ boost::optional<DocIdIterator> OperatorNot::next(bool initializate) {
 
 	do {
 
-		auto docId = left->next();
-		if(docId && boundaryDocId != **docId) {
+		auto leftEntry = left->next();
+		if(leftEntry && boundaryDocId != *leftEntry->docId) {
 
-			boundaryDocId = **docId;
+			boundaryDocId = *leftEntry->docId;
 			++specialCurrentEntry;
 
-		} else if(!docId){
+		} else if(!leftEntry){
 			
 			boundaryDocId = maxDocId;
 			++specialCurrentEntry;
 			break;
 		}
 
-	} while(boundaryDocId <= **specialCurrentEntry);
+	} while(boundaryDocId <= *(*specialCurrentEntry).docId);
 
 	
 	return specialCurrentEntry;
@@ -348,7 +342,7 @@ void QuoteBlock::reset() {
 
 }
 
-boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
+boost::optional<NodeOutput<DocIdIterator>> OperatorQuote::next(bool initializate) {
 
 	using DocIdType = typename CoordinateIndex<DefaultIndex>::DocId;
 	using PositionType = typename CoordinateIndex<DefaultIndex>::Position;
@@ -359,33 +353,34 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 	}
 
-	auto leftDocId = left->current();
-	auto rightDocId = right->current();
+	auto leftEntry = left->current();
+	auto rightEntry = right->current();
 	auto upperBound = quoteBlock->upperBound();
 
 	bool found = false;
-	while(leftDocId && rightDocId && !found) {
+	while(leftEntry && rightEntry && !found) {
 
-		if(algorithms::equal(*leftDocId, *rightDocId)) {
+		if(algorithms::equal(leftEntry->docId, rightEntry->docId)) {
 
-			auto leftPosition = algorithms::convertIterator<DocIdType, PositionType>(*leftDocId);
-			auto rightPosition = algorithms::convertIterator<DocIdType, PositionType>(*rightDocId);
+			auto leftPosition = algorithms::convertIterator<DocIdType, PositionType>(leftEntry->docId);
+			auto rightPosition = algorithms::convertIterator<DocIdType, PositionType>(rightEntry->docId);
 
 			auto currentDifference = *leftPosition <= *rightPosition ? 0 : *leftPosition - *rightPosition;
 		
 			if(currentDifference == 0 || currentDifference <= quoteBlock->lowerBound()) {
 
 				quoteBlock->removeLastDifference();
-				leftDocId = left->next();
+				leftEntry = left->next();
 
 			} else if(currentDifference > upperBound) {
 
-				rightDocId = right->next();
+				rightEntry = right->next();
 
 			} else if( currentDifference > quoteBlock->lowerBound() && currentDifference <= upperBound) {
 
 				quoteBlock->addDifference(currentDifference);
-				currentEntry = leftDocId;
+				currentEntry.emplace(leftEntry->docId, leftEntry->rankValue + rightEntry->rankValue);
+
 				right->next();
 				found = true;
 
@@ -393,14 +388,14 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 
 		} else {
 
-			if(algorithms::less(*leftDocId, *rightDocId)) {
+			if(algorithms::less(leftEntry->docId, rightEntry->docId)) {
 
 				quoteBlock->removeLastDifference();
-				leftDocId = left->next();
+				leftEntry = left->next();
 
 			} else {
 
-				rightDocId = right->next();
+				rightEntry = right->next();
 
 			}
 		}
@@ -419,7 +414,26 @@ boost::optional<DocIdIterator> OperatorQuote::next(bool initializate) {
 	return currentEntry;
 }
 
-boost::optional<DocIdIterator> Leaf::next(bool initializate) {
+
+void Leaf::concreteInitializate()
+{
+
+    using DocIdType = typename CoordinateIndex<DefaultIndex>::DocId;
+    using TFType = typename CoordinateIndex<DefaultIndex>::TF;
+    using DFType = typename CoordinateIndex<DefaultIndex>::DF;
+
+    if(currentEntry) {
+
+        auto tf = algorithms::convertIterator<DocIdType, TFType>(currentEntry->docId);
+        auto df = algorithms::convertIterator<DocIdType, DFType>(currentEntry->docId);
+
+        currentEntry->rankValue = StandartRanker::calculate(*tf, *df);
+
+    }
+
+}
+
+boost::optional<NodeOutput<DocIdIterator>> Leaf::next(bool initializate) {
 
 
     using DocIdType = typename CoordinateIndex<DefaultIndex>::DocId;
@@ -432,17 +446,17 @@ boost::optional<DocIdIterator> Leaf::next(bool initializate) {
 	
 	}
 
-	++(*currentEntry);
-	if(std::distance(*currentEntry, coordBlockEnd) <= 0) {
+	++(currentEntry->docId);
+	if(std::distance(currentEntry->docId, coordBlockEnd) <= 0) {
 
 		currentEntry = boost::none;
 
 	} else {
 
-	    auto tf = algorithms::convertIterator<DocIdType, TFType>(*currentEntry);
-	    auto df = algorithms::convertIterator<DocIdType, DFType>(*currentEntry);
+	    auto tf = algorithms::convertIterator<DocIdType, TFType>(currentEntry->docId);
+	    auto df = algorithms::convertIterator<DocIdType, DFType>(currentEntry->docId);
 
-	    ranker.updateTerminMetric(terminHash, *tf, *df);
+	    currentEntry->rankValue = StandartRanker::calculate(*tf, *df);
 	}
 
 	return currentEntry;

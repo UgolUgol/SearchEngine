@@ -45,12 +45,12 @@ std::vector<size_t> SearchTree::extractResults() {
 
 
     std::vector<std::pair<std::size_t, double>> searchResults;
-	auto currentDocId = root->current();
+	auto node = root->current();
 	
-	while(currentDocId != boost::none) {
+	while(node != boost::none) {
 
-        searchResults.emplace_back(**currentDocId, root->getRankMetric());
-		currentDocId = root->next();
+        searchResults.emplace_back(*node->docId, node->rankValue);
+		node = root->next();
 
 
 	}
