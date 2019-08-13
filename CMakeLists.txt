@@ -43,7 +43,8 @@ if(Boost_FOUND)
             boolean_search/make_search.cpp
             include/index.cpp
             include/expression_node.cpp
-            include/stemmer.cpp)
+            include/stemmer.cpp
+            )
 
     target_link_libraries(tokenize Boost::regex pthread tools)
     target_link_libraries(indexer tools index_maker)

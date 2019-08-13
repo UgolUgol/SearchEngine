@@ -3,8 +3,9 @@
 #include <vector>
 #include <cstddef>
 #include <tuple>
-
-
+#include <unordered_map>
+#include <boost/functional/hash.hpp>
+#include <optional>
 namespace OutputHandler {
 
 template<typename T> 
@@ -39,6 +40,41 @@ struct Output {
 	std::tuple<std::vector<size_t>, std::vector<unsigned char>, InvCoordFile> data;
 	using Traits = TypeTraits<std::tuple<std::vector<size_t>, std::vector<unsigned char>, InvCoordFile>>;
 };
+
+
+template<typename Input>
+class RankingHandler {
+public:
+    using TFKeyType = std::pair<typename Input::HashType, typename Input::DocId>;
+    using DFKeyType = typename Input::HashType;
+    using NumericType = typename Input::DocId;
+
+    void metricsCalculate(const Input& data);
+    std::optional<NumericType> getTf(typename Input::HashType hash, typename Input::DocId) const;
+    std::optional<NumericType> getDf(typename Input::HashType hash) const;
+
+private:
+
+
+    struct TFComparator {
+
+        std::size_t operator()(const TFKeyType& key) const noexcept
+        {
+
+            std::size_t seed{};
+            boost::hash_combine(seed, key.first);
+            boost::hash_combine(seed, key.second);
+
+            return seed;
+
+        }
+    };
+
+    std::unordered_map<TFKeyType, NumericType, TFComparator> tf;
+    std::unordered_map<DFKeyType, NumericType> df;
+
+};
+
 
 class StandartHandler {
 public:

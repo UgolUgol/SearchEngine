@@ -6,6 +6,73 @@
 
 namespace OutputHandler {
 
+
+template<typename Input>
+void RankingHandler<Input>::metricsCalculate(const Input &data)
+{
+
+    for(auto& raw : data) {
+
+        auto hash = std::get<Input::Traits::Hash>(raw);
+        auto docId = std::get<Input::Traits::DocId>(raw);
+
+        auto [tfNode, tfWasInserted] = tf.emplace(std::piecewise_construct,
+                                                  std::forward_as_tuple(hash, docId),
+                                                  std::forward_as_tuple(1));
+
+        if(tfWasInserted) {
+
+            auto [dfNode, dfWasInserted] = df.emplace(hash, 1);
+            if(!dfWasInserted) {
+
+                ++(dfNode->second);
+
+            }
+
+        }
+
+        if(!tfWasInserted) {
+
+            ++(tfNode->second);
+
+        }
+
+    }
+}
+
+template<typename Input>
+std::optional<typename RankingHandler<Input>::NumericType>
+RankingHandler<Input>::getTf(typename Input::HashType hash, typename Input::DocId docId) const
+{
+
+    auto tfNode = tf.find(std::make_pair(hash, docId));
+    if(tfNode == std::end(tf)) {
+
+        return std::nullopt;
+
+    }
+
+    return tfNode->second;
+
+}
+
+template<typename Input>
+std::optional<typename RankingHandler<Input>::NumericType>
+RankingHandler<Input>::getDf(typename Input::HashType hash) const
+{
+
+    auto dfNode = df.find(hash);
+    if(dfNode == std::end(df)) {
+
+        return std::nullopt;
+
+    }
+
+    return dfNode->second;
+
+}
+
+
 template<typename Input>
 StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 
@@ -32,6 +99,10 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
 	std::vector<typename Input::DocId> unpackedCoordFile;
 
+
+	RankingHandler<Input> ranker;
+	ranker.metricsCalculate(input);
+
 	for(auto raw = input.begin(); raw != input.end(); ++raw) {
 
 		size_t nextHash = std::get<Input::Traits::Hash>(*raw);
@@ -39,8 +110,10 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 
 			auto docId = std::get<Input::Traits::DocId>(*raw);
 			auto position = std::get<Input::Traits::Position>(*raw);
+            auto tf = ranker.getTf(nextHash, docId);
+            auto df = ranker.getDf(nextHash);
 
-			unpackedCoordFile.insert(std::end(unpackedCoordFile), {docId, position});
+			unpackedCoordFile.insert(std::end(unpackedCoordFile), {docId, position, *tf, *df});
 		
 		} else {
 
@@ -97,6 +170,7 @@ void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
 
 }
 
+template class RankingHandler<typename Sorter::QuickSorter::OutputType>;
 template StandartHandler::OutputType 
 StandartHandler::prepareForWrite<typename Sorter::QuickSorter::OutputType>(typename Sorter::QuickSorter::OutputType&& input);
 }
