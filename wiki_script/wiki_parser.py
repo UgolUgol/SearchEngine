@@ -28,7 +28,8 @@ async def run(articlesList):
 		return await asyncio.gather(*tasks)
 
 
-
+def utf8len(s):
+	return len(s.encode('utf-8'))
 
 def downloadTexts(articles):
 
@@ -59,6 +60,8 @@ def getArticlesList(categorymembers, level=0, max_level=2):
 			articlesList += getArticlesList(c.categorymembers, level=level + 1, max_level=max_level)
 		if c.ns == wikipediaapi.Namespace.MAIN:
 			articlesList.append(c.title)
+		if len(articlesList) > 3:
+			break
 	return articlesList
 
 def applyRegex(text, regex):
@@ -66,16 +69,22 @@ def applyRegex(text, regex):
 
 def handleTexts(wetTexts):
 	texts = []
+	
+	textsLengths = 0
 	for text in wetTexts:
+		page = next(iter(json.loads(text)['query']['pages'].values()))	
+		textsLengths += (len(page['extract']) + 1)
+	print(textsLengths)
 
+	for text in wetTexts:
 		try:
 			page = next(iter(json.loads(text)['query']['pages'].values()))	
 			title = page['title']
 			url = page['fullurl']
-			print("WIKIPEDIA_ARTICLE_BEGIN: ", title, '|WIKI_URL: ', url)
 			wikitext = page['extract']
+			text_size = len(wikitext) + 1
+			print("WIKIPEDIA_ARTICLE_BEGIN: ", title, '|WIKI_URL: ', url, '|', text_size)
 			print(wikitext)
-			print("WIKIPEDIA_ARTICLE_END")
 		except ValueError:
 			print("[!!!] Pass none text: ")
 

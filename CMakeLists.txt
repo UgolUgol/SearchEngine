@@ -38,6 +38,7 @@ if(Boost_FOUND)
     target_link_libraries(index_maker tools)
 
     add_executable(tokenize tokenizer/tokenizer.cpp)
+    add_executable(partialTokenize ${SEARCH_INCLUDEDIR}/reader.cpp experimental/tokenizer.cpp)
     add_executable(indexer index/make_index.cpp)
     add_executable(search
             boolean_search/make_search.cpp
@@ -47,10 +48,12 @@ if(Boost_FOUND)
             )
 
     target_link_libraries(tokenize Boost::regex pthread tools)
+    target_link_libraries(partialTokenize Boost::regex tools)
     target_link_libraries(indexer tools index_maker)
 
     set_target_properties(search PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${Executable_DIRECTORY}")
     set_target_properties(tokenize PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${Executable_DIRECTORY}")
+    set_target_properties(partialTokenize PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${Executable_DIRECTORY}")
     set_target_properties(indexer PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${Executable_DIRECTORY}")
 endif()
 
