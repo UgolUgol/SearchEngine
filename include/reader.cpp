@@ -18,33 +18,41 @@ StandartReader::~StandartReader() {
 bool StandartReader::openFile(const std::string& filename) {
 	ifs.open(filename);
 
-	OutputType::Traits::TokensType fileSize;
+/*	OutputType::Traits::TokensType fileSize;
 	std::getline(ifs, fileSize);
 	std::wistringstream ss(fileSize);
-	ss >> totalSize;
+	ss >> totalSize;*/
 
 	return ifs.is_open();
 }
 
 bool StandartReader::isFileEnd() {
-	return readSize >= totalSize;
+
+    std::getline(ifs, headLine);
+	return ifs.eof();
+
 }
 
 StandartReader::OutputType StandartReader::read() {
 
 	OutputType::Traits::TokensType text;
-	OutputType::Traits::TokensType headLine;
-	std::vector<OutputType::Traits::TokensType> vHeadLine; 
+    std::vector<OutputType::Traits::TokensType> vHeadLine;
 
-	std::getline(ifs, headLine);
-	Tools::split_regex(vHeadLine, headLine.c_str(), L"|", headLine.size());
-	size_t size;
-	std::wistringstream ss(vHeadLine[HeadLine::Size]);
-	ss >> size;
+    size_t size{};
+
+    Tools::split_regex(vHeadLine, headLine.c_str(), L"|", headLine.size());
+    std::wistringstream ss(vHeadLine[HeadLine::Size]);
+    ss >> size;
+
+    if(size == 0) {
+
+        size = 1;
+
+    }
+
 	text.assign(size - 1, L' ');
 	ifs.read(&text[0], size);
 
-	readSize += size;
 	return Output{ std::make_tuple(vHeadLine[HeadLine::Name], vHeadLine[HeadLine::Url], text) };
 }
 

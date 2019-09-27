@@ -61,7 +61,7 @@ int main() {
         const auto endline = (text).find(L"\n");
 
         auto tokens = tokenize(text, endline);
-        auto articleSize = std::to_wstring(std::accumulate(std::cbegin(tokens), std::cend(tokens), 0, [](unsigned sum, const auto& token){return sum + std::size(token); }));
+        auto articleSize = std::to_wstring(calculateSize(tokens));
 
         it = name + L"|" + url + L"|" + articleSize;
         std::transform(std::begin(tokens), std::end(tokens), it,

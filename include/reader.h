@@ -3,6 +3,7 @@
 #include <string>
 #include <fstream>
 #include <tuple>
+#include <optional>
 
 
 namespace Reader {
@@ -29,9 +30,12 @@ struct Output {
 };
 
 class StandartReader {
+
 	std::wifstream ifs;
-	unsigned readSize;
-	unsigned totalSize;
+	uint64_t readSize;
+	uint64_t totalSize;
+    Output::Traits::TokensType headLine;
+
 public:
 	using OutputType = Output; 
 

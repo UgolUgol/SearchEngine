@@ -23,7 +23,7 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
 	typename InputHandler::OutputType data; 
 
 	Reader::openFile(tokensFile);
-	while(!Reader::isFileEnd()) {
+    while(!Reader::isFileEnd()) {
 
 		InputHandler::OutputType::Traits::concatenate(data, InputHandler::prepareForSort(Reader::read()));
 

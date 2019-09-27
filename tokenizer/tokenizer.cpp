@@ -40,54 +40,6 @@ Tokens tokenize(const std::wstring& text, const size_t& endline) {
 
 }
 
-void createBigram(Tokens& bigrams,
-				  Tokens::const_iterator lborder,
-				  Tokens::const_iterator rborder,
-				  size_t bucketNum,
-				  size_t batchSize) {
-
-	size_t idx = bucketNum * (batchSize - 1);
-	for(auto token = lborder; token != rborder; token++) {
-
-		auto nextToken = std::next(token);
-		bigrams[idx++] = (*token + L"_" + *nextToken);
-		
-	}
-
-}
-
-void findBigrams(Tokens& tokens) {
-
-	size_t tokensCount = tokens.size() - 1;
-	if(tokensCount <= 1) {
-		return;
-	}
-
-	std::vector<std::thread> ths;
-	Tokens bigrams(tokensCount - 1);
-
-	size_t bucketNum = 0;
-	size_t batchSize = tokensCount;
-	for(auto token = tokens.cbegin(); token != tokens.cend() - 1; ++bucketNum) {
-
-		auto rborder = std::min(batchSize - 1, static_cast<size_t>(std::distance(token, tokens.cend() - 1)) - 1);
-		if(!rborder) {
-			break;
-		}
-
-		ths.emplace_back(createBigram, std::ref(bigrams), token, std::next(token, rborder), bucketNum, batchSize);
-		std::advance(token, rborder);
-
-	}
-
-	for(auto& th : ths) {
-		th.join();
-	}
-
-
-	std::move(bigrams.begin(), bigrams.end(), std::back_inserter(tokens));
-}
-
 int main(){
 
 	std::wcout.sync_with_stdio(false);
@@ -121,13 +73,8 @@ int main(){
 		articles.names[idx] = std::move(articleName);
 		articles.urls[idx] = std::move(url);
 		articles.tokens[idx] = tokenize(*text, endline);
-		articles.tokens[idx].emplace_back(L"@DUMMY");
-		futs.push_back(std::async(std::launch::async, findBigrams, std::ref(articles.tokens[idx])));
-	} 
 
-	for(auto& fut : futs) {
-		fut.wait();
-	}
+	} 
 
 	std::wofstream output("tokens");
 	output.imbue(std::locale("ru_RU.utf8"));
