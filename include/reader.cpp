@@ -37,7 +37,6 @@ StandartReader::OutputType StandartReader::read() {
 
 	OutputType::Traits::TokensType text;
     std::vector<OutputType::Traits::TokensType> vHeadLine;
-
     size_t size{};
 
     Tools::split_regex(vHeadLine, headLine.c_str(), L"|", headLine.size());
@@ -50,10 +49,10 @@ StandartReader::OutputType StandartReader::read() {
 
     }
 
-	text.assign(size - 1, L' ');
-	ifs.read(&text[0], size);
+    text.assign(size - 1, L' ');
+    ifs.read(&text[0], size);
 
-	return Output{ std::make_tuple(vHeadLine[HeadLine::Name], vHeadLine[HeadLine::Url], text) };
+    return Output{ std::make_tuple(vHeadLine[HeadLine::Name].substr(nameOffset), vHeadLine[HeadLine::Url].substr(urlOffset), text) };
 }
 
 }

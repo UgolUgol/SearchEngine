@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <tuple>
+#include <map>
 
 
 namespace InputHandler {
@@ -16,7 +17,7 @@ struct TypeTraits<std::vector<T>> {
 	}
 
 	using ValueType = T;
-	enum Indexes : size_t { Hash=0, DocId, Name, Url, Position };
+	enum Indexes : size_t { Hash=0, DocId, Position};
 };
 
 
@@ -27,12 +28,15 @@ struct Output {
 	using Name = std::wstring;
 	using URL = std::wstring;
 	using PositionType = size_t;
+	using value_type = std::tuple<HashType, DocId, PositionType>;
 
-	std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>> data;
-	using Traits = TypeTraits<std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>>;
+    std::vector<value_type> data;
+    static std::map<DocId, std::pair<Name, URL>> articles;
 
-	operator std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>&() & { return data; }
-	operator std::vector<std::tuple<HashType, DocId, Name, URL, PositionType>>&&() && { return std::move(data); }
+	using Traits = TypeTraits<std::vector<value_type>>;
+
+	operator std::vector<std::tuple<HashType, DocId, PositionType>>&() & { return data; }
+	operator std::vector<std::tuple<HashType, DocId, PositionType >>&&() && { return std::move(data); }
 
 	auto begin() {
 		return std::begin(data);

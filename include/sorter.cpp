@@ -15,5 +15,20 @@ QuickSorter::OutputType QuickSorter::sort(Input& input) {
 
 }
 
+template<typename NodeType>
+DiskCachedData<NodeType> ExternalSorter::sort(DiskCachedData<NodeType> &input)
+{
+
+    std::stable_sort(std::begin(input), std::end(input),
+            [](const NodeType& lhs, const NodeType& rhs) {
+       return std::get<0>(lhs) < std::get<0>(rhs);
+    });
+
+    return std::move(input);
+
+}
+
 template typename QuickSorter::OutputType QuickSorter::sort<InputHandler::Output>(InputHandler::Output& input);
+template ExternalSorter::OutputType<InputHandler::Output::value_type> ExternalSorter
+        ::sort<InputHandler::Output::value_type>(ExternalSorter::OutputType<InputHandler::Output::value_type>&);
 }

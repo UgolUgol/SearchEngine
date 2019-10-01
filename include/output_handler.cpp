@@ -42,7 +42,7 @@ void RankingHandler<Input>::metricsCalculate(const Input &data)
 
 template<typename Input>
 std::optional<typename RankingHandler<Input>::NumericType>
-RankingHandler<Input>::getTf(typename Input::HashType hash, typename Input::DocId docId) const
+RankingHandler<Input>::getTf(typename Input::Traits::HashType hash, typename Input::Traits::DocIdType docId) const
 {
 
     auto tfNode = tf.find(std::make_pair(hash, docId));
@@ -58,7 +58,7 @@ RankingHandler<Input>::getTf(typename Input::HashType hash, typename Input::DocI
 
 template<typename Input>
 std::optional<typename RankingHandler<Input>::NumericType>
-RankingHandler<Input>::getDf(typename Input::HashType hash) const
+RankingHandler<Input>::getDf(typename Input::Traits::HashType hash) const
 {
 
     auto dfNode = df.find(hash);
@@ -77,13 +77,14 @@ template<typename Input>
 StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 
 
-	if(input.size() == 0) {
+	if(std::cbegin(input) == std::cend(input)) {
 		return {};
 	}
+
 	OutputType output;
 
 	prepareIndex(input, output);
-	prepareInvCoordFile(input, output);
+	prepareInvCoordFile(output);
 
 	return output;
 }
@@ -97,7 +98,7 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 
 	size_t coordBlockOffsetBegin = 0;
 	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
-	std::vector<typename Input::DocId> unpackedCoordFile;
+	std::vector<typename Input::Traits::DocIdType> unpackedCoordFile;
 
 
 	RankingHandler<Input> ranker;
@@ -134,33 +135,23 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 }
 
 
-template<typename Input>
-void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
+void StandartHandler::prepareInvCoordFile(Output& output) {
 
 	decltype(auto) invCoordFile = std::get<OutputType::Traits::InvCoordFile>(output.data);
 
-	std::sort(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
-		return std::get<Input::Traits::DocId>(lhs) < std::get<Input::Traits::DocId>(rhs);
-	});
-	auto uniqueEnd = std::unique(input.begin(), input.end(), [](const auto& lhs, const auto& rhs) {
-		return std::get<Input::Traits::DocId>(lhs) == std::get<Input::Traits::DocId>(rhs);
-	});
-
-
-	size_t docIdCount = std::distance(input.begin(), uniqueEnd);
+	size_t docIdCount = std::size(InputHandler::Output::articles);
 	OutputType::InvCoordFile::HeadType bodySize = sizeof(OutputType::InvCoordFile::BodyType::value_type) * 
-											  	  OutputType::InvCoordFile::bodyBlockSize * 
+											  	  OutputType::InvCoordFile::bodyBlockSize *
 											      docIdCount;
 
 	size_t bottomOffset = bodySize + sizeof(OutputType::InvCoordFile::BodyType::value_type);
 	size_t urlAndNameOffset = 0;
-	for(auto raw = input.begin(); raw != uniqueEnd; ++raw) {
-			
-		auto name = std::get<Input::Traits::Name>(*raw);
-		auto url = std::get<Input::Traits::Url>(*raw);
-		auto docId = std::get<Input::Traits::DocId>(*raw);
-		bottomOffset += urlAndNameOffset;
+	for(auto raw = std::cbegin(InputHandler::Output::articles);raw != std::cend(InputHandler::Output::articles); ++raw) {
 
+	    auto& [docId, information] = *raw;
+	    auto& [name, url] = information;
+		bottomOffset += urlAndNameOffset;
+		
 		invCoordFile.body.insert(invCoordFile.body.end(), {docId, bottomOffset, name.size(), url.size()});
 		invCoordFile.bottom += (name + url);
 		urlAndNameOffset = (name.size() + url.size()) * sizeof(OutputType::InvCoordFile::BottomType::value_type);
@@ -170,7 +161,10 @@ void StandartHandler::prepareInvCoordFile(Input& input, Output& output) {
 
 }
 
-template class RankingHandler<typename Sorter::QuickSorter::OutputType>;
+using NodeType = typename InputHandler::Output::value_type;
+
+template class RankingHandler<typename Sorter::ExternalSorter::OutputType<NodeType>>;
+
 template StandartHandler::OutputType 
-StandartHandler::prepareForWrite<typename Sorter::QuickSorter::OutputType>(typename Sorter::QuickSorter::OutputType&& input);
+StandartHandler::prepareForWrite<typename Sorter::ExternalSorter::OutputType<NodeType>>(typename Sorter::ExternalSorter::OutputType<NodeType>&& input);
 }

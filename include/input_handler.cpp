@@ -9,6 +9,7 @@
 namespace InputHandler {
 
 Output::DocId StandartHandler::docId = 1;
+std::map<typename Output::DocId, std::pair<typename Output::Name, typename Output::URL>> Output::articles;
 
 template<typename Input>
 StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
@@ -21,6 +22,7 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 
 	OutputType::PositionType position = 1;
 	std::vector<TokensType> tokens;
+
 
 	NameType articleName = std::move(std::get<Input::Traits::Name>(input.data));
 	UrlType url = std::move(std::get<Input::Traits::Url>(input.data));
@@ -37,12 +39,12 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 		}
 
         Stemmer<typename TokensType::value_type> st(token);
-		output.data.emplace_back(std::hash<TokensType>{}(static_cast<TokensType>(st.normalize())),
-								 docId,
-								 articleName,
-								 url,
-								 position++);
-	}
+
+		output.data.emplace_back(std::hash<TokensType>{}(static_cast<TokensType>(st.normalize())), docId, position++);
+
+    }
+
+    output.articles.emplace(std::piecewise_construct, std::forward_as_tuple(docId), std::forward_as_tuple(articleName, url));
 
 	if(!output.data.empty()) {
 		++docId;

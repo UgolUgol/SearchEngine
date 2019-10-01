@@ -36,6 +36,9 @@ class StandartReader {
 	uint64_t totalSize;
     Output::Traits::TokensType headLine;
 
+    static constexpr size_t nameOffset = 26;
+    static constexpr size_t urlOffset = 11;
+
 public:
 	using OutputType = Output; 
 

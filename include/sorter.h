@@ -5,6 +5,7 @@
 #include <string>
 #include <tuple>
 #include "input_handler.h"
+#include <partition_file.h>
 
 namespace Sorter {
 
@@ -19,6 +20,12 @@ namespace Sorter {
 	public:
 		using OutputType = InputHandler::Output;
 		template<typename Input> OutputType sort(Input& input);
+	};
+
+	class ExternalSorter {
+	public:
+        template<typename T> using OutputType = DiskCachedData<T>;
+		template<typename NodeType> OutputType <NodeType> sort(OutputType<NodeType>& input);
 	};
 
 

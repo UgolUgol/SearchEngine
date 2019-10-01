@@ -32,7 +32,7 @@ if(Boost_FOUND)
             ${SEARCH_INCLUDEDIR}/output_handler.cpp
             ${SEARCH_INCLUDEDIR}/writer.cpp
             ${SEARCH_INCLUDEDIR}/index_maker.cpp
-            ${SEARCH_INCLUDEDIR}/stemmer.cpp)
+            ${SEARCH_INCLUDEDIR}/stemmer.cpp include/partition_file.h)
         
     set_target_properties(index_maker PROPERTIES COMPILE_FLAGS "-Wall -Werror -O2")
     target_link_libraries(index_maker tools)

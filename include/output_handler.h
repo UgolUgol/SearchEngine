@@ -45,13 +45,13 @@ struct Output {
 template<typename Input>
 class RankingHandler {
 public:
-    using TFKeyType = std::pair<typename Input::HashType, typename Input::DocId>;
-    using DFKeyType = typename Input::HashType;
-    using NumericType = typename Input::DocId;
+    using TFKeyType = std::pair<typename Input::Traits::HashType, typename Input::Traits::DocIdType>;
+    using DFKeyType = typename Input::Traits::HashType;
+    using NumericType = typename Input::Traits::DocIdType;
 
     void metricsCalculate(const Input& data);
-    std::optional<NumericType> getTf(typename Input::HashType hash, typename Input::DocId) const;
-    std::optional<NumericType> getDf(typename Input::HashType hash) const;
+    std::optional<NumericType> getTf(typename Input::Traits::HashType hash, typename Input::Traits::DocIdType) const;
+    std::optional<NumericType> getDf(typename Input::Traits::HashType hash) const;
 
 private:
 
@@ -80,13 +80,11 @@ class StandartHandler {
 public:
 
 	using OutputType = Output;
-
-	template<typename Input> 
-	OutputType prepareForWrite(Input&& input);
+	template<typename Input> OutputType prepareForWrite(Input&& input);
 private:
 
 	template<typename Input> void prepareIndex(Input& input, Output& output);
-	template<typename Input> void prepareInvCoordFile(Input& input, Output& output);
+	void prepareInvCoordFile(Output& output);
 };
 
 	
