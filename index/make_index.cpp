@@ -10,7 +10,7 @@
 
 int main() {
 	Indexer<Reader::StandartReader, InputHandler::StandartHandler,
-	 		Sorter::QuickSorter, OutputHandler::StandartHandler,
+	 		Sorter::ExternalSorter, OutputHandler::StandartHandler,
  		    Writer::StandartWriter> indexer("tokens", "dict", "coord", "invCoord") ;
  	indexer.make();
 
