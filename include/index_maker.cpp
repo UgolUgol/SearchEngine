@@ -24,7 +24,9 @@ template<typename Reader, typename InputHandler, typename Sorter, typename Outpu
 void Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>
 ::cacheOnDisk(typename InputHandler::OutputType&& output, const char *fname) const
 {
-    std::wcout << "Write part\n";
+    static unsigned long partNumber = 1;
+
+    std::wcout << "Write part " << partNumber++ << "\n";
 
     std::ofstream ofs;
     ofs.open(fname, std::ios::binary|std::ios::app);
@@ -39,10 +41,10 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
 
 
     Reader::openFile(tokensFile);
-    Writer::openFiles(dictFile, coordFile, invCoordFile);
 
     bool readAll{Reader::isFileEnd()};
     std::setlocale(LC_ALL, "ru_RU.utf8");
+    size_t part = 0;
 
     while(!readAll) {
 
@@ -61,19 +63,21 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
             }
 
         }
+        std::wcout << "handle " << part++ << "\n";
+/*        if(data.size() > 0) {
 
-        if(!readAll) {
+            cacheOnDisk(std::move(data), "cached1");
 
-            cacheOnDisk(std::move(data), "cached");
+        }*/
 
-        }
-        break;
+
     }
 
     DiskCachedData<typename InputHandler::OutputType::value_type> data("cached");
-    return Writer::write(OutputHandler::prepareForWrite(Sorter::sort(data)));
+    OutputHandler::prepareForWrite(std::move(data));
 
-	//return Writer::write(OutputHandler::prepareForWrite(Sorter::sort(data)));
+    return true;
+
 }
 
 template class Indexer<Reader::StandartReader,

@@ -31,7 +31,7 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 
 	Tools::split_regex(tokens, text.c_str(), Input::separator, text.size());
 	for(auto& token : tokens) {
-		
+
 		if(token == L"@dummy") {
 			break;
 			position = 1;
@@ -39,7 +39,6 @@ StandartHandler::OutputType StandartHandler::prepareForSort(Input&& input) {
 		}
 
         Stemmer<typename TokensType::value_type> st(token);
-
 		output.data.emplace_back(std::hash<TokensType>{}(static_cast<TokensType>(st.normalize())), docId, position++);
 
     }

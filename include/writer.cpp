@@ -27,6 +27,8 @@ bool StandartWriter::openFiles(const std::string& dictFile, const std::string& c
 template<typename Input>
 bool StandartWriter::write(Input&& input) {
 
+    std::wcout << "Start writting ... \n";
+
 	auto dict = std::get<Input::Traits::DictFile>(input.data);
 	auto coord = std::get<Input::Traits::CoordFile>(input.data);
 	auto invCoord = std::get<Input::Traits::InvCoordFile>(input.data);
@@ -47,5 +49,25 @@ bool StandartWriter::write(Input&& input) {
 
 template bool StandartWriter
 ::write<typename OutputHandler::StandartHandler::OutputType>(typename OutputHandler::StandartHandler::OutputType&& input);
+
+
+template<>
+void write<std::wstring>(const char* filename, std::vector<std::wstring>&& data)
+{
+
+    std::ofstream ofs;
+    ofs.open(filename, std::ios::binary|std::ios::app);
+
+    for(auto&& str : data) {
+
+        ofs.write(reinterpret_cast<char*>(str.data()), str.size() * sizeof(wchar_t));
+
+    }
+
+    ofs.close();
+
+
+}
+
 
 }

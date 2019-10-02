@@ -1,5 +1,6 @@
 #include "sorter.h"
 #include <algorithm>
+#include <iostream>
 
 namespace Sorter {
 
@@ -18,6 +19,8 @@ QuickSorter::OutputType QuickSorter::sort(Input& input) {
 template<typename NodeType>
 DiskCachedData<NodeType> ExternalSorter::sort(DiskCachedData<NodeType> &input)
 {
+
+    std::wcout << "Start sorting...\n";
 
     std::stable_sort(std::begin(input), std::end(input),
             [](const NodeType& lhs, const NodeType& rhs) {

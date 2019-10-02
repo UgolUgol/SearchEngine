@@ -1,5 +1,6 @@
 #include "output_handler.h"
 #include "sorter.h"
+#include "writer.h"
 #include <iostream>
 #include <algorithm>
 #include <varcode.h>
@@ -93,8 +94,7 @@ StandartHandler::OutputType StandartHandler::prepareForWrite(Input&& input) {
 template<typename Input>
 void StandartHandler::prepareIndex(Input& input, Output& output) {
 
-	decltype(auto) dictFile = std::get<OutputType::Traits::DictFile>(output.data);
-	decltype(auto) coordFile = std::get<OutputType::Traits::CoordFile>(output.data);
+    std::wcout << "Prepare dictionary and coordinate file indexes ...\n";
 
 	size_t coordBlockOffsetBegin = 0;
 	size_t currentHash = std::get<Input::Traits::Hash>(*input.begin());
@@ -118,26 +118,32 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 		
 		} else {
 
-			auto wrappedBytes = Varcode::compress(unpackedCoordFile); 
-			coordFile.insert(std::end(coordFile), std::begin(wrappedBytes), std::end(wrappedBytes));
-			dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, wrappedBytes.size()});
-			
-			currentHash = nextHash;
-			coordBlockOffsetBegin = sizeof(unsigned char) * coordFile.size();
-			unpackedCoordFile.resize(0);
-			--raw;
+		    auto wrappedBytes = Varcode::compress(unpackedCoordFile);
+		    auto bytesCount = std::size(wrappedBytes);
+
+            Writer::write("../index_files/dict.bin", std::vector<size_t>{currentHash, coordBlockOffsetBegin, bytesCount});
+            Writer::write("../index_files/coord.bin", std::move(wrappedBytes));
+
+            currentHash = nextHash;
+            coordBlockOffsetBegin += sizeof(unsigned char) * bytesCount;
+            unpackedCoordFile.clear();
+            --raw;
+
 		}
 	}
-	auto wrappedBytes = Varcode::compress(unpackedCoordFile); 
-	coordFile.insert(std::end(coordFile), std::begin(wrappedBytes), std::end(wrappedBytes));
-	dictFile.insert(dictFile.end(), {currentHash, coordBlockOffsetBegin, wrappedBytes.size()});
+
+    auto wrappedBytes = Varcode::compress(unpackedCoordFile);
+    auto bytesCount = std::size(wrappedBytes);
+
+    Writer::write("../index_files/dict.bin", std::vector<size_t>{currentHash, coordBlockOffsetBegin, bytesCount});
+    Writer::write("../index_files/coord.bin", std::move(wrappedBytes));
 	
 }
 
 
 void StandartHandler::prepareInvCoordFile(Output& output) {
 
-	decltype(auto) invCoordFile = std::get<OutputType::Traits::InvCoordFile>(output.data);
+    std::wcout << "Prepare inverse coordinate index ... \n";
 
 	size_t docIdCount = std::size(InputHandler::Output::articles);
 	OutputType::InvCoordFile::HeadType bodySize = sizeof(OutputType::InvCoordFile::BodyType::value_type) * 
@@ -146,18 +152,50 @@ void StandartHandler::prepareInvCoordFile(Output& output) {
 
 	size_t bottomOffset = bodySize + sizeof(OutputType::InvCoordFile::BodyType::value_type);
 	size_t urlAndNameOffset = 0;
+
+	// write head
+	Writer::write("../index_files/invCoord.bin", bodySize);
+
+	// write body
 	for(auto raw = std::cbegin(InputHandler::Output::articles);raw != std::cend(InputHandler::Output::articles); ++raw) {
 
 	    auto& [docId, information] = *raw;
 	    auto& [name, url] = information;
 		bottomOffset += urlAndNameOffset;
-		
-		invCoordFile.body.insert(invCoordFile.body.end(), {docId, bottomOffset, name.size(), url.size()});
-		invCoordFile.bottom += (name + url);
-		urlAndNameOffset = (name.size() + url.size()) * sizeof(OutputType::InvCoordFile::BottomType::value_type);
+
+		Writer::write("../index_files/invCoord.bin", std::vector<size_t>{docId, bottomOffset, name.size(), url.size()});
+        urlAndNameOffset = (name.size() + url.size()) * sizeof(OutputType::InvCoordFile::BottomType::value_type);
 
 	}
-	invCoordFile.head = bodySize;
+
+	// writer bottom
+	size_t batchSize{10000};
+	std::vector<std::wstring> batch(batchSize);
+    std::size_t currentPosition = 0;
+
+	for(auto raw = std::begin(InputHandler::Output::articles);raw != std::end(InputHandler::Output::articles); ++raw) {
+
+        auto& [docId, information] = *raw;
+        auto& [name, url] = information;
+
+        batch[currentPosition++] = std::move(name);
+        batch[currentPosition++] = std::move(url);
+
+	    if(currentPosition == batchSize) {
+
+	        Writer::write("../index_files/invCoord.bin", std::move(batch));
+	        currentPosition = 0;
+
+	    }
+
+	}
+
+	if(currentPosition > 0) {
+
+	    batch.resize(currentPosition);
+        Writer::write("../index_files/invCoord.bin", std::move(batch));
+
+	}
 
 }
 
