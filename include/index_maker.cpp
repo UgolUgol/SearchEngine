@@ -44,7 +44,6 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
 
     bool readAll{Reader::isFileEnd()};
     std::setlocale(LC_ALL, "ru_RU.utf8");
-    size_t part = 0;
 
     while(!readAll) {
 
@@ -63,12 +62,11 @@ bool Indexer<Reader, InputHandler, Sorter, OutputHandler, Writer>::make() {
             }
 
         }
-        std::wcout << "handle " << part++ << "\n";
-/*        if(data.size() > 0) {
+        if(data.size() > 0) {
 
             cacheOnDisk(std::move(data), "cached1");
 
-        }*/
+        }
 
 
     }

@@ -48,8 +48,9 @@ public:
     using TFKeyType = std::pair<typename Input::Traits::HashType, typename Input::Traits::DocIdType>;
     using DFKeyType = typename Input::Traits::HashType;
     using NumericType = typename Input::Traits::DocIdType;
+    using ResultType = typename Input::IteratorType;
 
-    void metricsCalculate(const Input& data);
+    ResultType metricsCalculate(typename Input::IteratorType begin, typename Input::IteratorType end, typename Input::Traits::HashType hash);
     std::optional<NumericType> getTf(typename Input::Traits::HashType hash, typename Input::Traits::DocIdType) const;
     std::optional<NumericType> getDf(typename Input::Traits::HashType hash) const;
 

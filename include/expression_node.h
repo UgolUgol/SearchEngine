@@ -51,7 +51,7 @@ private:
 
 struct StandartRanker {
 
-    static constexpr std::size_t DocumentsPackSize = 14923;
+    static constexpr std::size_t DocumentsPackSize = 4484323;
     static double calculate(typename TFIterator::value_type tf, typename DFIterator::value_type df)
     {
         return  tf * log10(DocumentsPackSize / static_cast<double>(df + 1));

@@ -18,6 +18,7 @@ template<typename NodeType>
 class DiskCachedData {
 public:
     using Traits = TypeTraits<NodeType>;
+    using IteratorType = IndexIterator<NodeType, sizeof(NodeType)>;
 
     DiskCachedData(const char* filename) : partitionFile(filename, boost::interprocess::read_write),
                                            mappedPartitionFile(partitionFile, boost::interprocess::read_write) { }

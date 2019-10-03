@@ -80,7 +80,7 @@ OperatorAnd::OperatorAnd() : ExpressionNode() { }
 
 OperatorOr::OperatorOr() : ExpressionNode() { }
 
-OperatorNot::OperatorNot() : ExpressionNode(), maxDocId(14923), specialCurrentEntry(maxDocId) { }
+OperatorNot::OperatorNot() : ExpressionNode(), maxDocId(4484323), specialCurrentEntry(maxDocId) { }
 
 OperatorQuote::OperatorQuote(size_t limit) {
 

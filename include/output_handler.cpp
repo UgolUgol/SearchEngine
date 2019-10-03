@@ -9,13 +9,23 @@ namespace OutputHandler {
 
 
 template<typename Input>
-void RankingHandler<Input>::metricsCalculate(const Input &data)
+typename RankingHandler<Input>::ResultType RankingHandler<Input>::metricsCalculate(typename Input::IteratorType begin, typename Input::IteratorType end, typename Input::Traits::HashType pivotHash)
 {
 
-    for(auto& raw : data) {
+    tf.clear();
+    df.clear();
 
-        auto hash = std::get<Input::Traits::Hash>(raw);
-        auto docId = std::get<Input::Traits::DocId>(raw);
+    auto raw = begin;
+    for(; raw != end; ++raw) {
+
+        auto hash = std::get<Input::Traits::Hash>(*raw);
+        auto docId = std::get<Input::Traits::DocId>(*raw);
+
+        if(hash > pivotHash) {
+
+            break;
+
+        }
 
         auto [tfNode, tfWasInserted] = tf.emplace(std::piecewise_construct,
                                                   std::forward_as_tuple(hash, docId),
@@ -39,6 +49,8 @@ void RankingHandler<Input>::metricsCalculate(const Input &data)
         }
 
     }
+
+    return raw;
 }
 
 template<typename Input>
@@ -102,7 +114,7 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
 
 
 	RankingHandler<Input> ranker;
-	ranker.metricsCalculate(input);
+	auto rangeStart = ranker.metricsCalculate(std::cbegin(input), std::cend(input), currentHash);
 
 	for(auto raw = input.begin(); raw != input.end(); ++raw) {
 
@@ -127,6 +139,8 @@ void StandartHandler::prepareIndex(Input& input, Output& output) {
             currentHash = nextHash;
             coordBlockOffsetBegin += sizeof(unsigned char) * bytesCount;
             unpackedCoordFile.clear();
+
+            rangeStart = ranker.metricsCalculate(rangeStart, std::cend(input), currentHash);
             --raw;
 
 		}
